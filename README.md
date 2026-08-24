@@ -7,7 +7,7 @@ Chrome extension (Manifest V3) that injects a client-intent score into Upwork jo
 - Vite 5 + `@crxjs/vite-plugin` (MV3 HMR)
 - Vanilla TypeScript (strict)
 - Tailwind CSS 3 (popup + options pages; in-page UI uses isolated Shadow DOM)
-- ExtensionPay ($29 lifetime license)
+- ExtensionPay ($9.99 early-bird license, first 50 buyers — then $19.99)
 
 ## Prerequisites
 
