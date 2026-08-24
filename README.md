@@ -66,10 +66,10 @@ Compares the client's advertised job budget against the historical hourly and fi
 
 ### 5. ✍️ 1-Click Proposal Hook Generator
 Generates three tailored, deterministic opening hooks (FNV-1a seeded) for every listing:
-- **Variant A (Problem/Fix)**: Directly addresses the client's primary tech requirement.
-- **Variant B (Proof/Portfolio)**: References the client's hiring volume and relevant repo samples.
-- **Variant C (Rate Match)**: Aligns with the client's historical payment benchmark.
 
+- **Variant A (Direct & Personalized)**: Opens on the client's exact stack requirement, promises immediate start, and asks what success looks like in the first two weeks.
+- **Variant B (Problem-First)**: Names the biggest failure mode for that job category (scope creep, layout drift, rate grounding), then proposes an audit-first approach with weekly iterations.
+- **Variant C (Quick Credibility)**: Leads with same-stack delivery proof and closes on a low-friction alignment call.
 ### 6. 🔔 Real-Time Saved-Search RSS Scanner
 Watches your saved-search RSS feeds in the background and sends instant desktop notifications the exact second a high-intent, verified client posts a matching listing.
 
