@@ -1,5 +1,5 @@
 import { SELECTORS, queryAll, queryFirst, queryFirstText } from '../config/selectors'
-import type { ActivityStats, ClientSignals, JobBudget, JobMeta, TrueRateBenchmark } from '../types'
+import type { ActivityStats, ClientSignals, JobBudget, JobMeta, RatingSummary, TrueRateBenchmark } from '../types'
 
 const EXCLUDED_SCOPE_SELECTOR =
   '[data-qa="sidebar"], [data-test="filters-sidebar"], [data-test="search-filters"], aside[class*="filter"]'
@@ -37,6 +37,51 @@ function findClientBlock(scope: HTMLElement): HTMLElement | null {
   return queryScopedFirstOf(scope, CLIENT_BLOCK_CHAIN)
 }
 
+function findAboutClientBlock(scope: HTMLElement): HTMLElement | null {
+  try {
+    const headings = scope.querySelectorAll<HTMLElement>('h2, h3')
+    for (const heading of Array.from(headings)) {
+      if (!ABOUT_CLIENT_RE.test(heading.textContent ?? '')) continue
+      const card =
+        heading.closest<HTMLElement>('.up-card-section') ??
+        heading.closest<HTMLElement>('section') ??
+        heading.closest<HTMLElement>('[class*="up-card"]') ??
+        heading.parentElement
+      if (card && notInExcluded(card)) return card
+    }
+
+    // "About the client" is not always a real heading element — fall back to
+    // any element whose direct text nodes carry the label.
+    const candidates = scope.querySelectorAll<HTMLElement>('div, span, p')
+    for (const el of Array.from(candidates)) {
+      const ownText = Array.from(el.childNodes)
+        .filter((node) => node.nodeType === Node.TEXT_NODE)
+        .map((node) => node.textContent ?? '')
+        .join(' ')
+        .trim()
+      if (!ABOUT_CLIENT_RE.test(ownText)) continue
+      const card =
+        el.closest<HTMLElement>('.up-card-section') ??
+        el.closest<HTMLElement>('section') ??
+        el.parentElement
+      if (card && notInExcluded(card)) return card
+    }
+  } catch {
+    return null
+  }
+  return null
+}
+
+// Generic chains like 'section:has(h2)' can match the drawer's MAIN content
+// columns (Attachment / Skills / Activity) before anything client-related —
+// verify evidence before trusting a structural hit.
+export function findClientBlockVerified(scope: HTMLElement): HTMLElement | null {
+  const about = findAboutClientBlock(scope)
+  if (about) return about
+  const structural = findClientBlock(scope)
+  return structural != null && hasClientEvidence(structural) ? structural : null
+}
+
 const FEEDBACK_SECTION_SELECTOR = [
   '[data-qa="client-job-history"]',
   '[class*="job-history"]',
@@ -62,6 +107,264 @@ function findClientHistory(scope: HTMLElement): HTMLElement | null {
     return queryScopedFirstOf(parent, CLIENT_HISTORY_CHAIN)
   }
   return null
+}
+
+const ABOUT_CLIENT_RE = /about the client/i
+const STATS_EVIDENCE_RE = /\btotal\s+spent\b|\bhire\s+rate\b|\bpayment\s+verif|\bavg\s+hourly\s+rate\s+paid\b|\bof\s+\d+\s+reviews?\b/i
+const CLIENT_EVIDENCE_SELECTOR = [
+  '[data-qa="client-info"]',
+  '[data-qa="client-company-profile"]',
+  '[data-test="client-stats"]'
+].join(', ')
+
+export function hasClientEvidence(scope: HTMLElement): boolean {
+  try {
+    if (scope.querySelector(CLIENT_EVIDENCE_SELECTOR) != null) return true
+  } catch {
+    return false
+  }
+
+  const text = scope.innerText ?? ''
+  if (ABOUT_CLIENT_RE.test(text) || STATS_EVIDENCE_RE.test(text)) return true
+
+  const headings = scope.querySelectorAll<HTMLElement>('h2, h3')
+  for (const heading of Array.from(headings)) {
+    if (ABOUT_CLIENT_RE.test(heading.textContent ?? '')) return true
+  }
+  return false
+}
+
+// The drawer's client sidebar renders inside one of these shells depending on
+// surface (search slider vs /jobs/ modal). Never trust a single guess — probe
+// all three and prefer whichever actually carries client evidence.
+const SLIDER_SCOPE_CHAIN = [
+  '[role="dialog"]',
+  '.air3-slider',
+  '[data-qa="job-details"]',
+  '[data-test*="jobdetails" i]',
+  '[data-qa="job-details-modal"]',
+  '.air3-slider-panel'
+]
+
+export function findActiveSliderScope(): HTMLElement | null {
+  const candidates: HTMLElement[] = []
+  for (const selector of SLIDER_SCOPE_CHAIN) {
+    try {
+      for (const el of Array.from(document.querySelectorAll<HTMLElement>(selector))) {
+        if (!el.isConnected || !isVisible(el) || !notInExcluded(el)) continue
+        candidates.push(el)
+      }
+    } catch {
+      continue
+    }
+  }
+  return (
+    candidates.find((el) => el !== undefined && hasClientEvidence(el)) ??
+    candidates[0] ??
+    null
+  )
+}
+
+export function resolveDrawerTarget(preferred: HTMLElement): HTMLElement {
+  if (hasClientEvidence(preferred)) return preferred
+  const scope = findActiveSliderScope()
+  return scope && scope !== preferred && hasClientEvidence(scope) ? scope : preferred
+}
+
+// Upwork renames its slider shell regularly — detect the OPEN drawer by
+// scanning every known container shape, keeping only visible candidates that
+// actually hold a job (heading or job anchor), then preferring the tightest
+// one that carries client evidence. Falls back to URL heuristics last.
+const DRAWER_CANDIDATE_CHAIN = [
+  '[data-test="job-details-modal"]',
+  '.air3-slider',
+  'aside[aria-label="Job details"]',
+  '[data-test*="jobdetails" i]',
+  '[data-qa="job-details-modal"]',
+  '.air3-slider-panel',
+  '[role="dialog"][aria-label*="job" i]'
+]
+
+export function findOpenDrawer(): HTMLElement | null {
+  const candidates: HTMLElement[] = []
+  for (const selector of DRAWER_CANDIDATE_CHAIN) {
+    try {
+      for (const el of Array.from(document.querySelectorAll<HTMLElement>(selector))) {
+        if (!el.isConnected || !isVisible(el) || !notInExcluded(el)) continue
+        if (!el.querySelector('h1, h2, a[href*="/jobs/"]')) continue
+        candidates.push(el)
+      }
+    } catch {
+      continue
+    }
+  }
+  if (candidates.length > 0) {
+    const withEvidence = candidates.filter((el) => hasClientEvidence(el))
+    const pool = withEvidence.length > 0 ? withEvidence : candidates
+    // Nested shells (slider wrapping modal) both qualify — take the tightest.
+    return pool.reduce((best, el) => {
+      const bestArea = best.getBoundingClientRect().width * best.getBoundingClientRect().height
+      const elArea = el.getBoundingClientRect().width * el.getBoundingClientRect().height
+      return elArea < bestArea ? el : best
+    })
+  }
+  return findDrawerByStructure()
+}
+
+const DRAWER_LABEL_RE = /about the client/i
+
+function elementOwnText(el: HTMLElement): string {
+  return Array.from(el.childNodes)
+    .filter((node) => node.nodeType === Node.TEXT_NODE)
+    .map((node) => node.textContent ?? '')
+    .join(' ')
+    .trim()
+}
+
+// The drawer shell is the smallest ancestor of the client sidebar that also
+// holds the job heading or a job anchor — no class names required, survives
+// any Upwork redesign.
+function smallestSharedShell(from: HTMLElement): HTMLElement | null {
+  let node: HTMLElement | null = from.parentElement
+  while (node && node !== document.body) {
+    if (node.querySelector('h1, a[href*="/jobs/"]')) return node
+    node = node.parentElement
+  }
+  return null
+}
+
+function findDrawerByStructure(): HTMLElement | null {
+  if (!isDrawerRoute()) return null
+  try {
+    const labelCandidates = document.querySelectorAll<HTMLElement>('h2, h3, div, span, p')
+    for (const el of Array.from(labelCandidates)) {
+      if (!el.isConnected) continue
+      if (!DRAWER_LABEL_RE.test(elementOwnText(el))) continue
+      const shell = smallestSharedShell(el)
+      if (shell && isVisible(shell) && notInExcluded(shell)) return shell
+    }
+
+    // Brand-new client: no "About the client" section yet. Climb from the job
+    // heading to the first ancestor sized like a full-height slider panel.
+    const heading = document.querySelector<HTMLElement>('h1')
+    if (heading) {
+      let node: HTMLElement | null = heading.parentElement
+      while (node && node !== document.body) {
+        const rect = node.getBoundingClientRect()
+        if (rect.width >= window.innerWidth * 0.5 && rect.height >= window.innerHeight * 0.6) {
+          return notInExcluded(node) ? node : null
+        }
+        node = node.parentElement
+      }
+    }
+  } catch {
+    return null
+  }
+  return null
+}
+
+export function isDrawerRoute(): boolean {
+  return /\/(nx\/search\/)?jobs\/(details\/)?~/.test(window.location.pathname)
+}
+
+export interface DrawerClientWaiter {
+  cancel(): void
+}
+
+export function waitForDrawerClient(
+  container: HTMLElement,
+  onReady: () => void,
+  onGiveUp?: () => void,
+  attempts = 5,
+  intervalMs = 300
+): DrawerClientWaiter {
+  let done = false
+  let tries = 0
+  let timer: number | undefined
+  let probeQueued = false
+  let scopeObserver: MutationObserver | null = null
+
+  const finish = (): void => {
+    done = true
+    if (timer !== undefined) {
+      window.clearTimeout(timer)
+      timer = undefined
+    }
+    observer.disconnect()
+    scopeObserver?.disconnect()
+    scopeObserver = null
+  }
+
+  const evidenceSeen = (): boolean => {
+    if (container.isConnected && document.body.contains(container)) {
+      if (hasClientEvidence(container)) return true
+    }
+    const scope = findActiveSliderScope()
+    return !!scope && hasClientEvidence(scope)
+  }
+
+  const probe = (): void => {
+    probeQueued = false
+    if (done) return
+
+    const containerDead =
+      !container.isConnected || !document.body.contains(container)
+    const scope = findActiveSliderScope()
+    if (containerDead && !scope) {
+      finish()
+      return
+    }
+    attachScopeWatcher(scope)
+
+    if (evidenceSeen()) {
+      finish()
+      onReady()
+      return
+    }
+    tries += 1
+    if (tries >= attempts) {
+      finish()
+      onGiveUp?.()
+      return
+    }
+    timer = window.setTimeout(tick, intervalMs)
+  }
+
+  const tick = (): void => probe()
+
+  const scheduleProbe = (): void => {
+    if (done || probeQueued) return
+    probeQueued = true
+    if (timer !== undefined) window.clearTimeout(timer)
+    timer = window.setTimeout(probe, 60)
+  }
+
+  // The client sidebar may land inside a slider shell other than the node we
+  // were handed — watch that shell's mutations too so convergence is instant.
+  const attachScopeWatcher = (scope: HTMLElement | null): void => {
+    if (!scope || scope === container || scopeObserver) return
+    scopeObserver = new MutationObserver(scheduleProbe)
+    try {
+      scopeObserver.observe(scope, { childList: true, subtree: true })
+    } catch {
+      scopeObserver = null
+    }
+  }
+
+  const observer = new MutationObserver(scheduleProbe)
+  try {
+    observer.observe(container, { childList: true, subtree: true })
+  } catch {
+    // container may already be detached — polling below still runs its course
+  }
+
+  timer = window.setTimeout(tick, 0)
+
+  return {
+    cancel(): void {
+      finish()
+    }
+  }
 }
 
 const DETAIL_ROOT_CHAIN = [
@@ -151,22 +454,28 @@ export function parseRelativeDays(text: string | null): number | null {
   return Math.max(0, Math.round(n * UNITS[unitKey]))
 }
 
+export function normalizeJobId(id: string): string {
+  const trimmed = (id ?? '').trim()
+  const withoutQuery = trimmed.split(/[?#]/)[0] ?? ''
+  return withoutQuery.replace(/\/+$/, '').replace(/^~/, '')
+}
+
 export function extractJobId(url: string): string {
   try {
     const path = new URL(url).pathname
     const tilde = /~([0-9a-z]{8,})/i.exec(path)
-    if (tilde) return tilde[1]
+    if (tilde) return normalizeJobId(tilde[1])
     const segment = path.split('/').filter(Boolean).pop()
-    return segment ?? path
+    return normalizeJobId(segment ?? path)
   } catch {
-    return url
+    return normalizeJobId(url)
   }
 }
 
 export function matchHireRate(text: string): number | null {
   const patterns: RegExp[] = [
-    /hire\s*rate[^%\n]{0,24}(\d+(?:\.\d+)?)\s*%/i,
-    /(\d+(?:\.\d+)?)\s*%\s*hire\s+rate/i
+    /(\d+(?:\.\d+)?)\s*%\s*hire\s*rate/i,
+    /hire\s*rate[^%\n]{0,24}(\d+(?:\.\d+)?)\s*%/i
   ]
   for (const pattern of patterns) {
     const match = pattern.exec(text)
@@ -177,8 +486,27 @@ export function matchHireRate(text: string): number | null {
   return null
 }
 
+export function extractAvgHourlyPaid(text: string): number | null {
+  const match =
+    /\$\s*(\d[\d.]*)\s*\/\s*hr\s+avg\s+hourly\s+rate\s+paid/i.exec(text) ??
+    /\$\s*(\d[\d.]*)\s+avg\s+hourly\s+rate\s+paid/i.exec(text)
+  if (!match) return null
+  const value = parseFloat(match[1])
+  return Number.isNaN(value) || value <= 0 ? null : Math.round(value * 100) / 100
+}
+
+export function extractRatingSummary(text: string): RatingSummary | null {
+  const match = /(\d(?:\.\d+)?)\s*of\s*(\d+)\s+reviews?/i.exec(text)
+  if (!match) return null
+  const avg = parseFloat(match[1])
+  const count = parseInt(match[2], 10)
+  if (Number.isNaN(avg) || Number.isNaN(count) || count <= 0) return null
+  return { avg, count }
+}
+
 function labeledSpend(text: string): number | null {
   const patterns: RegExp[] = [
+    /\$\s*([\d,]+(?:\.\d+)?[kKmM]?)\s*total\s+spent/i,
     /(\$[\d,.]+[km]?)\s+total\s+spent/i,
     /(?:total\s+spent|total\s+spend|lifetime\s+spent)[^\d$]{0,20}\$\s?([\d.,]+)\s?(k|m)?\b/i,
     /\$\s?([\d.,]+)\s?(k|m)?\b[^$\n]{0,16}\bspent\b/i
@@ -187,7 +515,8 @@ function labeledSpend(text: string): number | null {
     const match = pattern.exec(text)
     if (match) {
       const value = parseMoney(match[0])
-      if (value != null && value > 0) return value
+      // "$0 spent" is explicit, meaningful data — keep it, only reject junk.
+      if (value != null && value >= 0 && /\d/.test(match[0])) return value
     }
   }
   return null
@@ -454,6 +783,7 @@ export interface CardParseResult {
   activity: ActivityStats | null
   budget: JobBudget | null
   trueRate: TrueRateBenchmark | null
+  rating: RatingSummary | null
 }
 
 export function parseCardProfile(card: HTMLElement): CardParseResult | null {
@@ -488,7 +818,7 @@ export function parseCardProfile(card: HTMLElement): CardParseResult | null {
     feedbacks: []
   }
 
-  return { meta, signals, activity: null, budget: null, trueRate: null }
+  return { meta, signals, activity: null, budget: null, trueRate: null, rating: null }
 }
 
 export function parseDrawerProfile(drawer: HTMLElement): CardParseResult | null {
@@ -503,7 +833,7 @@ export function parseDrawerProfile(drawer: HTMLElement): CardParseResult | null 
   const anchor = drawer.querySelector<HTMLAnchorElement>('a[href*="/jobs/"]')
   const href = anchor?.href ?? window.location.href
 
-  const clientBlock = findClientBlock(drawer)
+  const clientBlock = findClientBlockVerified(drawer)
   const historyBlock = findClientHistory(drawer)
   const signalSource = clientBlock ?? drawer
   const sourceText = signalSource.innerText ?? ''
@@ -513,7 +843,9 @@ export function parseDrawerProfile(drawer: HTMLElement): CardParseResult | null 
   const signals: ClientSignals = {
     hireRatePct: matchHireRate(hireSource),
     totalSpendUsd: extractClientSpend(drawer),
-    paymentVerified: detectPaymentVerified(historyBlock ?? signalSource),
+    paymentVerified:
+      detectPaymentVerified(historyBlock ?? signalSource) ??
+      detectPaymentVerified(drawer),
     daysSinceLastHire: latestFeedbackDays(drawer)
   }
 
@@ -534,12 +866,25 @@ export function parseDrawerProfile(drawer: HTMLElement): CardParseResult | null 
     feedbacks: collectFeedbacks(drawer)
   }
 
+  let trueRate = historyBlock ? computeTrueRate(historyBlock) : null
+  const avgHourlyPaid = extractAvgHourlyPaid(`${sourceText}\n${drawerText}`)
+  if (avgHourlyPaid != null) {
+    trueRate = trueRate
+      ? { ...trueRate, medianHourlyUsd: trueRate.medianHourlyUsd ?? avgHourlyPaid }
+      : { medianHourlyUsd: avgHourlyPaid, avgFixedUsd: null, sampleCount: 0 }
+  }
+
+  const rating =
+    extractRatingSummary(`${historyBlock?.innerText ?? ''}\n${sourceText}`) ??
+    extractRatingSummary(drawerText)
+
   return {
     meta,
     signals,
     activity: extractActivityStats(drawer),
     budget: parseJobBudget(drawer),
-    trueRate: historyBlock ? computeTrueRate(historyBlock) : null
+    trueRate,
+    rating
   }
 }
 
@@ -549,6 +894,7 @@ export interface DetailEnrichment {
   activity?: ActivityStats | null
   budget?: JobBudget | null
   trueRate?: TrueRateBenchmark | null
+  rating?: RatingSummary | null
 }
 
 export function parseContainerEnrichment(
@@ -556,7 +902,7 @@ export function parseContainerEnrichment(
 ): DetailEnrichment | null {
   if (!container.isConnected || !notInExcluded(container)) return null
 
-  const clientBlock = findClientBlock(container)
+  const clientBlock = findClientBlockVerified(container)
   const source = clientBlock ?? container
   const sourceText = source.innerText ?? ''
 
@@ -568,7 +914,8 @@ export function parseContainerEnrichment(
   const spend = extractClientSpend(container)
   if (spend != null) patch.totalSpendUsd = spend
 
-  const verified = detectPaymentVerified(source)
+  const verified =
+    detectPaymentVerified(source) ?? detectPaymentVerified(container)
   if (verified !== null) patch.paymentVerified = verified
 
   const feedbacks = collectFeedbacks(container)
@@ -576,12 +923,21 @@ export function parseContainerEnrichment(
   const recentDays = latestFeedbackDays(container)
   if (recentDays != null) patch.daysSinceLastHire = recentDays
 
+  let trueRate = computeTrueRate(container)
+  const avgHourlyPaid = extractAvgHourlyPaid(sourceText)
+  if (avgHourlyPaid != null) {
+    trueRate = trueRate
+      ? { ...trueRate, medianHourlyUsd: trueRate.medianHourlyUsd ?? avgHourlyPaid }
+      : { medianHourlyUsd: avgHourlyPaid, avgFixedUsd: null, sampleCount: 0 }
+  }
+
   return {
     signalsPatch: patch,
     feedbacks,
     activity: extractActivityStats(container),
     budget: parseJobBudget(container),
-    trueRate: computeTrueRate(container)
+    trueRate,
+    rating: extractRatingSummary(sourceText)
   }
 }
 

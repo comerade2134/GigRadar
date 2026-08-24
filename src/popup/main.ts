@@ -1,5 +1,5 @@
 import './style.css'
-import { getCachedLicense, openUpgradeFlow, syncLicense } from '../monetization/extpay'
+import { getCachedLicense, openUpgradeFlow, syncLicense, PRO_PRICE, PRO_PRICE_NOTE } from '../monetization/extpay'
 import { getConnectsSaved, DOLLARS_PER_CONNECT } from '../engine/metrics'
 
 const app = document.querySelector<HTMLDivElement>('#app')
@@ -80,7 +80,7 @@ if (app) {
       <button id="upgrade"
         class="group relative w-full overflow-hidden rounded-lg bg-gradient-to-b from-brand-300 to-brand-600 py-2.5 text-sm font-extrabold tracking-tight text-obsidian shadow-cta transition-all duration-150 hover:brightness-110 active:scale-[.98] active:brightness-95">
         <span class="absolute inset-x-0 top-0 h-px bg-white/40"></span>
-        ⚡ Upgrade to Lifetime Pro — $29
+        ⚡ Get Lifetime Pro — ${PRO_PRICE} Early Bird
       </button>
 
       <button id="pro-active" hidden
@@ -158,6 +158,8 @@ if (app) {
       pillEl.innerHTML = `
         <span class="h-1.5 w-1.5 rounded-full bg-brand-400 animate-pulse-dot"></span>
         Active on Upwork`
+      statusNote.textContent = PRO_PRICE_NOTE
+      statusNote.classList.remove('hidden')
     }
   }
 

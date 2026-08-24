@@ -3,7 +3,7 @@ import { EXTPAY_EXTENSION_ID, readCachedLicense, writeCachedLicense } from './ex
 
 const extpay = ExtPay(EXTPAY_EXTENSION_ID)
 
-export { EXTPAY_EXTENSION_ID, getCachedLicense } from './extpay-core'
+export { EXTPAY_EXTENSION_ID, getCachedLicense, PRO_PRICE, PRO_PRICE_NOTE } from './extpay-core'
 
 export async function syncLicense(): Promise<boolean> {
   let paid: boolean

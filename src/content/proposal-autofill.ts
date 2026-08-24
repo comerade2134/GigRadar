@@ -1,4 +1,6 @@
 import { SELECTORS, queryAll, queryFirst } from '../config/selectors'
+import { extensionContextValid } from '../context'
+import { normalizeJobId } from './parse'
 import {
   detectTags,
   generateHookVariants,
@@ -21,15 +23,17 @@ interface IntelCacheEntry {
 function extractJobIdFromUrl(): string {
   try {
     const tilde = /~([0-9a-z]{8,})/i.exec(window.location.pathname)
-    if (tilde) return tilde[1]
-    return window.location.pathname.split('/').filter(Boolean).pop() ?? ''
+    if (tilde) return normalizeJobId(tilde[1])
+    return normalizeJobId(
+      window.location.pathname.split('/').filter(Boolean).pop() ?? ''
+    )
   } catch {
     return ''
   }
 }
 
 async function loadIntelCache(jobId: string): Promise<IntelCacheEntry | null> {
-  if (!jobId) return null
+  if (!jobId || !extensionContextValid()) return null
   try {
     const key = `${INTEL_CACHE_PREFIX}${jobId}`
     const result = await chrome.storage.local.get(key)
@@ -304,6 +308,10 @@ function isProposalPage(): boolean {
 }
 
 function scan(): void {
+  if (!extensionContextValid()) {
+    observer.disconnect()
+    return
+  }
   if (!isProposalPage()) return
   const textarea = findCoverLetter()
   if (textarea && isVisible(textarea)) mountToolbar(textarea)

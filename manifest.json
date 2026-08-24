@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "GigRadar — Upwork Client Inspector",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Instant client intent scores, hire-rate red flags, client name extraction and proposal hooks for Upwork freelancers.",
   "minimum_chrome_version": "110",
   "permissions": ["storage", "alarms", "notifications"],

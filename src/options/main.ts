@@ -5,7 +5,7 @@ import {
   loadScannerSettings,
   saveScannerSettings
 } from '../engine/feed-scanner'
-import { getCachedLicense, openUpgradeFlow, syncLicense } from '../monetization/extpay'
+import { getCachedLicense, openUpgradeFlow, syncLicense, PRO_PRICE, PRO_PRICE_NOTE } from '../monetization/extpay'
 import type { Provider } from '../types'
 
 const app = document.querySelector<HTMLDivElement>('#app')
@@ -34,7 +34,7 @@ if (app) {
       <div class="flex flex-wrap gap-2">
         <button id="buy"
           class="rounded-lg bg-gradient-to-b from-brand-300 to-brand-600 px-4 py-2 text-sm font-extrabold text-obsidian shadow-cta transition-all duration-150 hover:brightness-110 active:scale-[.98]">
-          Get Pro — $29 lifetime
+          Get Pro — ${PRO_PRICE} early bird
         </button>
         <button id="recheck"
           class="rounded-lg border border-edge bg-raised px-4 py-2 text-sm font-semibold text-mute transition-colors duration-150 hover:border-brand-500/40 hover:text-ink active:scale-[.99]">
@@ -163,7 +163,7 @@ if (app) {
       const paid = await syncLicense()
       licenseStatus.textContent = paid
         ? 'Pro is active — thanks for supporting GigRadar!'
-        : 'Free tier active. Pro unlocks client-name extraction and the hook generator.'
+        : `Free tier active. Pro unlocks client-name extraction and the hook generator — ${PRO_PRICE} early bird (${PRO_PRICE_NOTE.toLowerCase()}).`
     } catch {
       licenseStatus.textContent = await getCachedLicense().then(
         (paid) => (paid ? 'Pro is active (cached).' : 'License unknown — press Re-check.')

@@ -35,6 +35,11 @@ export interface NameGuess {
   alternates: string[]
 }
 
+export interface RatingSummary {
+  avg: number
+  count: number
+}
+
 export interface JobMeta {
   jobId: string
   title: string
@@ -94,6 +99,7 @@ export interface EnrichmentData {
   budget?: JobBudget | null
   trueRate?: TrueRateBenchmark | null
   sentiment?: SentimentReport | null
+  rating?: RatingSummary | null
 }
 
 export type Provider = 'openai' | 'anthropic'

@@ -1,4 +1,5 @@
-import { SELECTORS, queryAll, queryFirst } from '../config/selectors'
+import { SELECTORS, queryAll } from '../config/selectors'
+import { extensionContextValid } from '../context'
 import { computeRedFlags, feedAlert, scoreClient } from '../engine/scoring'
 import { addConnectsSaved, CONNECTS_PER_SKIP } from '../engine/metrics'
 import { extractClientName } from '../engine/name-extractor'
@@ -6,15 +7,21 @@ import { scanScamSignals } from '../engine/red-flags'
 import { analyzeSentiment } from '../engine/sentiment'
 import {
   extractJobId,
+  findClientBlockVerified,
   findJobDetailsContainer,
+  findOpenDrawer,
+  isDrawerRoute,
   parseCardProfile,
   parseContainerEnrichment,
   parseDrawerProfile,
-  parseProposalCount
+  parseProposalCount,
+  resolveDrawerTarget,
+  waitForDrawerClient,
+  type DrawerClientWaiter
 } from './parse'
 import type { CardParseResult } from './parse'
 import { mountBadge } from './badge'
-import { mountInlineCard, openDetailModal } from './modal'
+import { detectGuestMode, mountInlineCard, openDetailModal } from './modal'
 import type {
   ActivityStats,
   ClientSignals,
@@ -62,6 +69,25 @@ const SIDEBAR_CHAIN = [
 let activeData: EnrichmentData | null = null
 let lastAutoOpenedJobId: string | null = null
 let currentDrawerKey: string | null = null
+
+// Every feed card is fully parsed at scan time — remember those snapshots so a
+// drawer opened by clicking anywhere on the card (not just the title link)
+// can still seed the panel with the card's stats.
+const CARD_CACHE_LIMIT = 48
+const cardParses = new Map<string, CardParseResult>()
+
+function rememberCardParse(parsed: CardParseResult): void {
+  if (!parsed.meta.jobId) return
+  if (cardParses.has(parsed.meta.jobId)) {
+    cardParses.delete(parsed.meta.jobId)
+  }
+  cardParses.set(parsed.meta.jobId, parsed)
+  while (cardParses.size > CARD_CACHE_LIMIT) {
+    const oldest = cardParses.keys().next().value
+    if (oldest === undefined) break
+    cardParses.delete(oldest)
+  }
+}
 
 function isJobDetailPage(): boolean {
   return /\/jobs\//.test(window.location.pathname)
@@ -116,6 +142,7 @@ let lastCachedJobId: string | null = null
 let cacheWriteCount = 0
 
 async function pruneIntelCache(): Promise<void> {
+  if (!extensionContextValid()) return
   try {
     const all = await chrome.storage.local.get(null)
     const cutoff = Date.now() - 7 * 86_400_000
@@ -133,6 +160,7 @@ async function pruneIntelCache(): Promise<void> {
 }
 
 async function saveIntelCache(data: EnrichmentData): Promise<void> {
+  if (!extensionContextValid()) return
   const jobId = data.meta.jobId
   if (!jobId || jobId === lastCachedJobId) return
   lastCachedJobId = jobId
@@ -159,6 +187,7 @@ function buildEnrichment(parsed: CardParseResult): EnrichmentData {
   let activity = parsed.activity
   let budget = parsed.budget
   let trueRate: TrueRateBenchmark | null = parsed.trueRate
+  let rating = parsed.rating
   let feedbacks = parsed.meta.feedbacks
   let scamHaystack = `${parsed.meta.title}\n${parsed.meta.descriptionSnippet}`
 
@@ -171,6 +200,7 @@ function buildEnrichment(parsed: CardParseResult): EnrichmentData {
       activity = detail.activity ?? activity
       budget = detail.budget ?? budget
       trueRate = pickTrueRate(trueRate, detail.trueRate)
+      rating = detail.rating ?? rating
       scamHaystack = `${container?.innerText ?? ''}\n${scamHaystack}`
     }
   }
@@ -197,7 +227,8 @@ function buildEnrichment(parsed: CardParseResult): EnrichmentData {
     activity,
     budget,
     trueRate,
-    sentiment
+    sentiment,
+    rating
   }
 }
 
@@ -214,6 +245,7 @@ function scanFeed(): void {
 
     const parsed = parseCardProfile(card)
     if (!parsed) continue
+    rememberCardParse(parsed)
 
     const signals = parsed.signals
     const hasVisibleData =
@@ -282,6 +314,8 @@ const SIGNAL_KEYS = [
 
 let lazyTimer: number | undefined
 let refreshTarget: HTMLElement | null = null
+let lazyGen = 0
+let activeWaiter: DrawerClientWaiter | null = null
 
 function signalsFingerprint(signals: ClientSignals): string {
   return SIGNAL_KEYS.map((key) => String(signals[key] ?? '·')).join('|')
@@ -305,152 +339,223 @@ function enrichmentFingerprint(data: EnrichmentData): string {
     data.meta.feedbacks.length,
     activityFingerprint(data.activity),
     data.trueRate?.sampleCount ?? -1,
-    data.flags.map((flag) => flag.text).join('§')
+    data.flags.map((flag) => flag.text).join('§'),
+    data.rating ? `★${data.rating.avg}` : '-'
   ].join('#')
 }
 
 function stopLazyRefresh(): void {
+  lazyGen += 1
   if (lazyTimer !== undefined) {
     window.clearTimeout(lazyTimer)
     lazyTimer = undefined
   }
+  activeWaiter?.cancel()
+  activeWaiter = null
   refreshTarget = null
 }
 
-function startLazyRefresh(container: HTMLElement): void {
-  stopLazyRefresh()
-  refreshTarget = container
-  let attempts = 0
-
-  const tick = (): void => {
-    lazyTimer = undefined
-    const target = refreshTarget
-    if (!target || !target.isConnected || !document.body.contains(target)) {
-      stopLazyRefresh()
-      return
+function mergeTick(target: HTMLElement): void {
+  const effectiveTarget = resolveDrawerTarget(target)
+  const parsed = parseDrawerProfile(effectiveTarget)
+  if (parsed && activeData && parsed.meta.jobId === activeData.meta.jobId) {
+    const merged: ClientSignals = { ...activeData.signals }
+    const patch = parsed.signals
+    const writable = merged as Record<(typeof SIGNAL_KEYS)[number], number | boolean>
+    for (const key of SIGNAL_KEYS) {
+      const value = patch[key]
+      if (value != null) writable[key] = value
     }
 
-    const parsed = parseDrawerProfile(target)
-    if (parsed && activeData && parsed.meta.jobId === activeData.meta.jobId) {
-      const merged: ClientSignals = { ...activeData.signals }
-      const patch = parsed.signals
-      const writable = merged as Record<(typeof SIGNAL_KEYS)[number], number | boolean>
-      for (const key of SIGNAL_KEYS) {
-        const value = patch[key]
-        if (value != null) writable[key] = value
+    const mergedActivity: ActivityStats = {
+      ...(activeData.activity ?? {
+        proposalsCount: null,
+        interviewingCount: null,
+        invitesSentCount: null,
+        unansweredInvitesCount: null
+      })
+    }
+    const activityPatch = parsed.activity ?? activeData.activity
+    if (activityPatch) {
+      const writableActivity = mergedActivity as Record<
+        (typeof ACTIVITY_KEYS)[number],
+        number | null
+      >
+      for (const key of ACTIVITY_KEYS) {
+        const value = activityPatch[key]
+        if (value != null) writableActivity[key] = value
       }
+    }
+    const hasActivityValues = Object.values(mergedActivity).some((v) => v != null)
 
-      const mergedActivity: ActivityStats = {
-        ...(activeData.activity ?? {
-          proposalsCount: null,
-          interviewingCount: null,
-          invitesSentCount: null,
-          unansweredInvitesCount: null
-        })
-      }
-      const activityPatch = parsed.activity ?? activeData.activity
-      if (activityPatch) {
-        const writableActivity = mergedActivity as Record<
-          (typeof ACTIVITY_KEYS)[number],
-          number | null
-        >
-        for (const key of ACTIVITY_KEYS) {
-          const value = activityPatch[key]
-          if (value != null) writableActivity[key] = value
-        }
-      }
-      const hasActivityValues = Object.values(mergedActivity).some((v) => v != null)
+    const feedbacks = Array.from(
+      new Set([...activeData.meta.feedbacks, ...parsed.meta.feedbacks])
+    )
+    const proposalCount =
+      parsed.meta.proposalCount ?? activeData.meta.proposalCount
+    const budget = parsed.budget ?? activeData.budget ?? null
+    const trueRate = pickTrueRate(activeData.trueRate, parsed.trueRate)
+    const scam = scanScamSignals(effectiveTarget.innerText ?? '')
+    const sentiment = analyzeSentiment(feedbacks)
+    const rating = parsed.rating ?? activeData.rating ?? null
 
-      const feedbacks = Array.from(
-        new Set([...activeData.meta.feedbacks, ...parsed.meta.feedbacks])
-      )
-      const proposalCount =
-        parsed.meta.proposalCount ?? activeData.meta.proposalCount
-      const budget = parsed.budget ?? activeData.budget ?? null
-      const trueRate = pickTrueRate(activeData.trueRate, parsed.trueRate)
-      const scam = scanScamSignals(target.innerText ?? '')
-      const sentiment = analyzeSentiment(feedbacks)
+    const before = enrichmentFingerprint(activeData)
+    const candidateFlags = computeRedFlags({
+      signals: merged,
+      proposalCount,
+      activity: hasActivityValues ? mergedActivity : null,
+      budget,
+      trueRate,
+      sentiment,
+      scamMatched: scam.matched
+    })
 
-      const before = enrichmentFingerprint(activeData)
-      const candidateFlags = computeRedFlags({
+    const after = [
+      signalsFingerprint(merged),
+      feedbacks.length,
+      activityFingerprint(hasActivityValues ? mergedActivity : null),
+      trueRate?.sampleCount ?? -1,
+      candidateFlags.map((flag) => flag.text).join('§'),
+      rating ? `★${rating.avg}` : '-'
+    ].join('#')
+
+    if (after !== before) {
+      const refreshed: EnrichmentData = {
+        meta: { ...activeData.meta, proposalCount, feedbacks },
         signals: merged,
-        proposalCount,
+        score: scoreClient(merged),
+        flags: candidateFlags,
+        nameGuess: extractClientName(feedbacks),
         activity: hasActivityValues ? mergedActivity : null,
         budget,
         trueRate,
         sentiment,
-        scamMatched: scam.matched
-      })
+        rating
+      }
+      setActive(refreshed)
 
-      const after = [
-        signalsFingerprint(merged),
-        feedbacks.length,
-        activityFingerprint(hasActivityValues ? mergedActivity : null),
-        trueRate?.sampleCount ?? -1,
-        candidateFlags.map((flag) => flag.text).join('§')
-      ].join('#')
-
-      if (after !== before) {
-        const refreshed: EnrichmentData = {
-          meta: { ...activeData.meta, proposalCount, feedbacks },
-          signals: merged,
-          score: scoreClient(merged),
-          flags: candidateFlags,
-          nameGuess: extractClientName(feedbacks),
-          activity: hasActivityValues ? mergedActivity : null,
-          budget,
-          trueRate,
-          sentiment
-        }
-        setActive(refreshed)
-
-        if (document.querySelector('[data-gigradar-modal]') != null) {
-          openDetailModal({ ...refreshed }, { docked: true })
-        }
-        const inlineHost = document.querySelector<HTMLElement>('[data-gigradar-inline]')
-        if (inlineHost?.parentElement?.isConnected) {
-          mountInlineCard(
-            inlineHost.parentElement,
-            { ...refreshed },
-            () => openDetailModal({ ...refreshed }, {})
-          )
-        }
+      if (document.querySelector('[data-gigradar-modal]') != null) {
+        openDetailModal({ ...refreshed }, { docked: true })
+      }
+      const inlineHost = document.querySelector<HTMLElement>('[data-gigradar-inline]')
+      if (inlineHost?.parentElement?.isConnected) {
+        mountInlineCard(
+          inlineHost.parentElement,
+          { ...refreshed },
+          () => openDetailModal({ ...refreshed }, {})
+        )
       }
     }
+  }
+}
 
+function resolveScanVerdict(): void {
+  if (!activeData || activeData.score.scored) return
+  if (document.querySelector('[data-gigradar-modal]') == null) return
+  // Scan window closed with nothing found — replace the SCANNING state with
+  // an honest NO DATA instead of leaving it pending forever.
+  openDetailModal({ ...activeData }, { docked: true, settled: true })
+}
+
+function startLazyRefresh(container: HTMLElement): void {
+  stopLazyRefresh()
+  const gen = lazyGen
+  refreshTarget = container
+  let attempts = 0
+
+  const alive = (): boolean =>
+    gen === lazyGen &&
+    !!refreshTarget &&
+    refreshTarget.isConnected &&
+    document.body.contains(refreshTarget)
+
+  const tick = (): void => {
+    lazyTimer = undefined
+    if (!alive()) {
+      stopLazyRefresh()
+      return
+    }
+    mergeTick(refreshTarget!)
     attempts += 1
     if (attempts < 12) {
       lazyTimer = window.setTimeout(tick, 900)
     } else {
       stopLazyRefresh()
+      resolveScanVerdict()
     }
   }
 
-  lazyTimer = window.setTimeout(tick, 1100)
+  // Fast phase: the drawer sidebar renders asynchronously on /nx/search/jobs.
+  // Converge the moment client evidence lands (max 5 probes, 300ms apart)
+  // instead of sleeping a full second and locking NO DATA into the panel.
+  activeWaiter = waitForDrawerClient(
+    container,
+    () => {
+      if (alive()) tick()
+    },
+    () => {
+      if (alive()) tick()
+    },
+    5,
+    300
+  )
 }
 
-function handleNativeDrawer(drawer: HTMLElement): void {  const parsed = parseDrawerProfile(drawer)
+function seedDrawerParse(parsed: CardParseResult): CardParseResult {
+  const known =
+    activeData && activeData.meta.jobId === parsed.meta.jobId
+      ? activeData
+      : cardParses.get(parsed.meta.jobId) ?? recentClickedCard()
+  if (!known) return parsed
+
+  const s = parsed.signals
+  const k = known.signals
+  return {
+    ...parsed,
+    signals: {
+      hireRatePct: s.hireRatePct ?? k.hireRatePct,
+      totalSpendUsd: s.totalSpendUsd ?? k.totalSpendUsd,
+      paymentVerified: s.paymentVerified ?? k.paymentVerified,
+      daysSinceLastHire: s.daysSinceLastHire ?? k.daysSinceLastHire
+    },
+    budget: parsed.budget ?? known.budget ?? null,
+    trueRate: parsed.trueRate ?? known.trueRate ?? null,
+    rating: parsed.rating ?? known.rating ?? null,
+    meta: {
+      ...parsed.meta,
+      title:
+        parsed.meta.title && parsed.meta.title !== 'Upwork job'
+          ? parsed.meta.title
+          : known.meta.title || parsed.meta.title,
+      proposalCount: parsed.meta.proposalCount ?? known.meta.proposalCount
+    }
+  }
+}
+
+function handleNativeDrawer(drawer: HTMLElement): void {
+  const parsed = parseDrawerProfile(drawer)
 
   let data: EnrichmentData | null = null
   if (parsed) {
-    data = buildEnrichment(parsed)
+    // Seed the drawer parse with whatever the feed card already knew so the
+    // panel opens instantly with real numbers while the async sidebar loads.
+    data = buildEnrichment(seedDrawerParse(parsed))
   } else if (activeData) {
     data = activeData
   }
   if (!data) return
 
   setActive(data)
+  openDetailModal({ ...data! }, { docked: true, settled: detectGuestMode() })
 
   void (async () => {
-    const sidebar = await findSidebarWithRetry()
+    const sidebar = (await findSidebarWithRetry()) ?? findClientBlockVerified(drawer)
     if (!drawer.isConnected || !document.body.contains(drawer)) return
 
     if (sidebar) {
       mountInlineCard(sidebar, data!, () =>
         openDetailModal({ ...data! }, {})
       )
-    } else {
-      openDetailModal({ ...data! }, { docked: true })
     }
   })()
 
@@ -458,7 +563,7 @@ function handleNativeDrawer(drawer: HTMLElement): void {  const parsed = parseDr
 }
 
 function scanForDrawer(): void {
-  const drawer = queryFirst(document.body, SELECTORS.jobDrawer)
+  const drawer = findOpenDrawer()
 
   if (!drawer || !isConnectedVisible(drawer)) {
     currentDrawerKey = null
@@ -554,11 +659,12 @@ function openFromDetailPage(): void {
     activity: detail.activity,
     budget: detail.budget,
     trueRate: detail.trueRate,
-    sentiment
+    sentiment,
+    rating: detail.rating ?? null
   }
 
   setActive(data)
-  openDetailModal(data, { docked: true })
+  openDetailModal(data, { docked: true, settled: detectGuestMode() })
   startLazyRefresh(container)
 }
 
@@ -620,6 +726,13 @@ function ensureTrigger(): HTMLElement {
     trigger.addEventListener('click', (event) => {
       event.preventDefault()
       event.stopPropagation()
+      // If a drawer is open but wasn't detected through the normal scan path,
+      // the pill becomes a self-healing entry point into the full pipeline.
+      const drawer = findOpenDrawer()
+      if (drawer) {
+        handleNativeDrawer(drawer)
+        return
+      }
       if (activeData) openDetailModal({ ...activeData }, { docked: true })
       else openFromDetailPage()
     })
@@ -630,7 +743,7 @@ function ensureTrigger(): HTMLElement {
 }
 
 function refreshTrigger(): void {
-  const shouldShow = !!activeData || isJobDetailPage()
+  const shouldShow = !!activeData || isJobDetailPage() || isDrawerRoute()
 
   if (!shouldShow) {
     document.getElementById(DETAIL_TRIGGER_ID)?.remove()
@@ -650,20 +763,28 @@ function refreshTrigger(): void {
   }
 }
 
-function installTitlePassthrough(): void {
+// Clicking anywhere on a feed card (title, body, badge) is the strongest
+// signal we get about which drawer is about to open — snapshot the card's
+// stats so seedDrawerParse can repaint the panel even when Upwork's drawer
+// anchor uses an incompatible ID format.
+const CLICK_FALLBACK_MS = 3000
+let lastCardClick: { parsed: CardParseResult; at: number } | null = null
+
+function recentClickedCard(): CardParseResult | null {
+  if (!lastCardClick) return null
+  if (Date.now() - lastCardClick.at > CLICK_FALLBACK_MS) return null
+  return lastCardClick.parsed
+}
+
+function installCardClickTracker(): void {
   document.addEventListener(
     'click',
     (event) => {
       const target = event.target as HTMLElement | null
       if (!target || typeof target.closest !== 'function') return
+      if (!extensionContextValid()) return
 
-      const anchor = target.closest(
-        'h2 a[href*="/jobs/"], a.up-n-link[href*="/jobs/"], ' +
-          SELECTORS.titleLink.join(', ')
-      ) as HTMLAnchorElement | null
-      if (!anchor) return
-
-      const card = anchor.closest(
+      const card = target.closest(
         SELECTORS.jobCard.join(', ')
       ) as HTMLElement | null
       if (!card) return
@@ -671,6 +792,8 @@ function installTitlePassthrough(): void {
       const parsed = parseCardProfile(card)
       if (!parsed) return
 
+      rememberCardParse(parsed)
+      lastCardClick = { parsed, at: Date.now() }
       setActive(buildEnrichment(parsed))
     },
     true
@@ -709,6 +832,10 @@ function onUrlChange(): void {
 }
 
 function runScan(): void {
+  if (!extensionContextValid()) {
+    observer.disconnect()
+    return
+  }
   try {
     scanFeed()
   } catch {
@@ -732,7 +859,7 @@ const observer = new MutationObserver(scheduledScan)
 
 function start(): void {
   patchHistory()
-  installTitlePassthrough()
+  installCardClickTracker()
   observer.observe(document.body, { childList: true, subtree: true })
   runScan()
   onUrlChange()

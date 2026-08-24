@@ -2,7 +2,8 @@ import { extractClientName } from '../engine/name-extractor'
 import { generateHookVariants } from '../engine/templates'
 import type { HookVariant } from '../engine/templates'
 import { loadByok, polishHook } from '../engine/byok'
-import { getCachedLicense } from '../monetization/extpay-core'
+import { extensionContextValid } from '../context'
+import { getCachedLicense, PRO_PRICE, PRO_PRICE_NOTE } from '../monetization/extpay-core'
 import type { EnrichmentData } from '../types'
 
 const MODAL_STYLES = `
@@ -94,12 +95,25 @@ const MODAL_STYLES = `
   .flag-warn   { background: rgba(245,158,11,.08); color: #FCD34D; border-color: rgba(245,158,11,.28); }
   .flag-ok     { background: rgba(16,185,129,.08); color: #6EE7B7; border-color: rgba(16,185,129,.28); }
   .gate { position: relative; border-radius: 12px; }
+  .gate.locked { min-height: 96px; }
   .gate.locked > *:not(.lock-overlay) { filter: blur(5px); pointer-events: none; user-select: none; opacity: .55; }
   .lock-overlay {
     position: absolute; inset: -4px;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
     background: rgba(13,15,18,.45);
     border-radius: 12px;
+  }
+  .paywall-note {
+    display: block;
+    margin-top: 6px;
+    margin-bottom: 16px;
+    line-height: 1.4;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    text-align: center;
+    color: #9CA3AF;
   }
   .pro-btn {
     padding: 10px 18px;
@@ -186,6 +200,25 @@ const MODAL_STYLES = `
   .act.primary:hover { filter: brightness(1.08); }
   .act[disabled] { opacity: .45; cursor: not-allowed; transform: none !important; }
   .err { margin-top: 8px; font-size: 12px; color: #F87171; }
+  .scan-note {
+    display: flex; align-items: center; gap: 8px;
+    margin: 0 0 12px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    background: rgba(245,158,11,.07);
+    border: 1px solid rgba(245,158,11,.25);
+    color: #FCD34D;
+    font-size: 12px; line-height: 1.45;
+  }
+  .scan-note i {
+    width: 7px; height: 7px; border-radius: 999px; flex: none;
+    background: #F59E0B;
+    animation: grScanPulse 1.1s ease-in-out infinite;
+  }
+  @keyframes grScanPulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(245,158,11,.5); }
+    50% { opacity: .5; box-shadow: 0 0 0 4px rgba(245,158,11,0); }
+  }
   .guest-note {
     display: flex; align-items: center; gap: 10px;
     margin: 14px 0 2px;
@@ -342,6 +375,12 @@ const INLINE_STYLES = `
 
 export interface PanelOptions {
   docked?: boolean
+  /**
+   * Set only when every lazy-refresh retry has exhausted and the client is
+   * confirmed to have zero visible stats. Until then an unscored panel shows
+   * the SCANNING state instead of jumping straight to "-- NO DATA".
+   */
+  settled?: boolean
 }
 
 function escapeHtml(value: string): string {
@@ -628,14 +667,36 @@ function wireHookActions(scope: HTMLElement, data: EnrichmentData): void {
 
 const GUEST_LOGIN_URL = 'https://www.upwork.com/ab/account/security/login'
 
-function detectGuestMode(): boolean {
-  const markers =
-    'a[href*="/account/login"], a[href*="/users/login"], a[href*="/users/signup"], a[data-qa="nav-login"], [data-qa*="login" i]'
+export function detectGuestMode(): boolean {
+  const markers = [
+    'a[href*="/account/security/login"]',
+    'a[href*="/account/login"]',
+    'a[href*="/users/login"]',
+    'a[href*="/users/signup"]',
+    'a[data-qa="nav-login"]',
+    '[data-qa*="login" i]',
+    '[data-qa*="sign-up" i]',
+    '[data-qa*="signup" i]',
+    '[data-test*="login" i]'
+  ].join(', ')
   try {
-    return document.querySelector(markers) != null
+    if (document.querySelector(markers) != null) return true
+
+    // Upwork reshuffles guest-nav markup regularly — fall back to scanning
+    // header/nav controls for the login/signup labels themselves.
+    const controls = document.querySelectorAll<HTMLElement>(
+      'header a, header button, nav a, nav button, [role="banner"] a, [role="banner"] button'
+    )
+    for (const el of Array.from(controls)) {
+      const label = (el.textContent ?? '').trim().toLowerCase()
+      if (label === 'log in' || label === 'sign in' || label === 'sign up') {
+        return true
+      }
+    }
   } catch {
     return false
   }
+  return false
 }
 
 export function openDetailModal(
@@ -649,15 +710,20 @@ export function openDetailModal(
   ensurePanel(!!options.docked)
   if (!contentEl || !panelEl || !shadow) return
 
+  // Re-renders happen when lazy drawer merges land — keep the user's
+  // scroll position stable across them instead of jumping back to the top.
+  const prevScrollTop = contentEl.scrollTop
+
   panelEl.querySelector('.gr-head')?.remove()
   contentEl.innerHTML = ''
 
   const scored = data.score.scored
+  const pending = !scored && !options.settled
   const ringClass = scored
     ? `tier-${data.score.tier.toLowerCase()}`
     : 'tier-nodata'
   const ringValue = scored ? `${data.score.score}` : '--'
-  const ringLabel = scored ? 'SCORE' : 'NO DATA'
+  const ringLabel = scored ? 'SCORE' : pending ? 'SCANNING' : 'NO DATA'
 
   const head = document.createElement('div')
   head.className = 'gr-head head'
@@ -679,8 +745,13 @@ export function openDetailModal(
       ? `<div class="guest-note"><span><b>Guest mode detected</b> — log in to Upwork so client history becomes visible.</span><button id="gr-guest-login" class="guest-link" type="button">Log in</button></div>`
       : ''
 
+  const pendingScanNote = pending
+    ? `<div class="scan-note"><i></i>Reading the client sidebar — live numbers land here in a moment…</div>`
+    : ''
+
   contentEl.innerHTML = `
     ${guestNote}
+    ${pendingScanNote}
     <h3 class="sec">Intent signals</h3>
     <table class="signals"><tbody>${signalRows(data)}</tbody></table>
 
@@ -729,30 +800,43 @@ export function openDetailModal(
 
   wireHookActions(contentEl, data)
 
+  contentEl.scrollTop = prevScrollTop
+
   const proSections = [contentEl.querySelector('#gr-name'), contentEl.querySelector('#gr-hook')]
-  void getCachedLicense().then((paid) => {
-    for (const section of proSections) {
-      if (!section) continue
-      if (paid) continue
-      section.classList.add('locked')
-      const overlay = document.createElement('div')
-      overlay.className = 'lock-overlay'
-      const btn = document.createElement('button')
-      btn.className = 'pro-btn'
-      btn.textContent = 'Unlock with GigRadar Pro — $29 lifetime'
-      btn.addEventListener('click', (event) => {
-        event.stopPropagation()
-        void chrome.runtime.sendMessage({ type: 'OPEN_OPTIONS' })
-        closePanel()
-      })
-      overlay.appendChild(btn)
-      section.appendChild(overlay)
-    }
-  })
+  getCachedLicense()
+    .then((paid) => {
+      for (const section of proSections) {
+        if (!section) continue
+        if (paid) continue
+        section.classList.add('locked')
+        const overlay = document.createElement('div')
+        overlay.className = 'lock-overlay'
+        const btn = document.createElement('button')
+        btn.className = 'pro-btn'
+        btn.textContent = `Unlock with GigRadar Pro — ${PRO_PRICE} Early Bird`
+        btn.addEventListener('click', (event) => {
+          event.stopPropagation()
+          if (extensionContextValid()) {
+            void chrome.runtime.sendMessage({ type: 'OPEN_OPTIONS' }).catch(() => undefined)
+          }
+          closePanel()
+        })
+        const note = document.createElement('span')
+        note.className = 'paywall-note'
+        note.textContent = PRO_PRICE_NOTE
+        overlay.appendChild(btn)
+        overlay.appendChild(note)
+        section.appendChild(overlay)
+      }
+    })
+    .catch(() => undefined)
 }
 
 function metaSubline(data: EnrichmentData): string {
   const parts: string[] = []
+  if (data.rating) {
+    parts.push(`★ ${data.rating.avg.toFixed(2)} (${data.rating.count} reviews)`)
+  }
   if (data.meta.postedText) parts.push(data.meta.postedText)
   if (data.meta.proposalCount != null) parts.push(`${data.meta.proposalCount}+ proposals`)
   return parts.join(' · ')
@@ -834,7 +918,9 @@ export function mountInlineCard(
       </div>
       <div class="brandline">
         <b>GigRadar Client Intel</b>
-        <span>${escapeHtml(data.score.tier)} intent${data.meta.proposalCount != null ? ` · ${data.meta.proposalCount}+ proposals` : ''}</span>
+        <span>${escapeHtml(data.score.tier)} intent${
+          data.rating ? ` · ★ ${data.rating.avg.toFixed(2)} (${data.rating.count})` : ''
+        }${data.meta.proposalCount != null ? ` · ${data.meta.proposalCount}+ proposals` : ''}</span>
       </div>
       <button class="expand" type="button">Full Intel ▸</button>
     </div>

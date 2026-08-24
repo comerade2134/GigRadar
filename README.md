@@ -43,7 +43,7 @@ ExtPay is vendored locally (`src/vendor/extpay.module.js`, AGPLv3, from [Glench/
 
 1. Create an extension entry at <https://extensionpay.com> and connect Stripe.
 2. Replace `REPLACE_WITH_EXTENSIONPAY_EXTENSION_ID` in `src/monetization/extpay-core.ts` with your real extension ID (single source of truth).
-3. Free tier: intent score + red-flag warnings. Pro ($29 lifetime): client-name extractor + proposal hook generator.
+3. Free tier: intent score + red-flag warnings. Pro: client-name extractor + proposal hook generator — **$9.99 early bird** for the first 50 licenses, then $19.99 (lifetime, no subscription). Price copy lives in `PRO_PRICE` / `PRO_PRICE_NOTE` in the same file.
 
 Wiring already in place:
 
@@ -64,17 +64,25 @@ src/
 ├── types.ts                  shared domain types + runtime message union
 ├── config/selectors.ts       every DOM selector with fallback chains (patch here when Upwork ships redesigns)
 ├── engine/
-│   ├── scoring.ts            weighted 0–100 score, null-aware weight redistribution, red flags
+│   ├── scoring.ts            weighted 0–100 score, null-aware weight redistribution, feed alerts
+│   ├── red-flags.ts          scam/off-platform regex scanner (6 categories)
+│   ├── sentiment.ts          negative-feedback keyword analysis → temperament flag
 │   ├── name-extractor.ts     regex voting over past-feedback text + stoplist + confidence gate
-│   ├── templates.ts          deterministic category-tagged hook templates (fnv1a-seeded)
+│   ├── templates.ts          deterministic category-tagged hook variants A/B/C (fnv1a-seeded)
+│   ├── feed-scanner.ts       RSS parsing + heuristic job scoring + seen-cache for notifications
+│   ├── metrics.ts            connects-saved counter (8 Connects per skipped flagged job)
 │   └── byok.ts               BYOK settings storage + permission request + SW message call
-├── monetization/extpay.ts    license sync/cache (24h TTL) + upgrade flow
-├── background/service-worker.ts   OPEN_OPTIONS relay + BYOK provider proxy fetch
+├── monetization/
+│   ├── extpay-core.ts        ExtensionPay ID (single source of truth) + license cache
+│   └── extpay.ts             license sync/cache + upgrade flow
+├── background/service-worker.ts   ExtPay startBackground + RSS scan alarms/notifications + BYOK proxy
 └── content/
     ├── parse.ts              money/%/count/relative-time parsers + card & detail extraction
     ├── badge.ts              Shadow-DOM score pill injected per job card
     ├── modal.ts              slide-out intel panel: signals, flags, name, hook generator
-    └── index.ts              debounced MutationObserver orchestrator + detail-page trigger
+    ├── proposal-autofill.ts  Quick-Fill toolbar + screening-question drafting on proposal pages
+    ├── payment-relay.ts      document_start relay on extensionpay.com (ExtPay MV3 wiring)
+    └── index.ts              debounced MutationObserver orchestrator + detail-page trigger + lazy drawer merge
 ```
 
 ### Design guarantees
@@ -86,3 +94,13 @@ src/
 ## Selector maintenance
 
 Upwork ships redesigns without notice. All selectors live in one file (`src/config/selectors.ts`) as ordered fallback chains — when a badge stops appearing, update the chain there; nothing else needs touching.
+
+## Upgrading to Pro — $9.99 Early Bird
+
+Pro is purchased **inside the extension** (via ExtensionPay/Stripe), not here:
+
+1. Install the extension (steps above)
+2. Open any Upwork job panel → click the blurred **"Unlock with GigRadar Pro"** section, or the **⚡ Get Lifetime Pro** button in the popup
+3. Complete checkout → license syncs within seconds → blur lifts everywhere
+
+**First 50 freelancers: $9.99 lifetime · then $19.99. Early buyers keep lifetime access forever.**
