@@ -2,7 +2,7 @@
 
 ## Short (Discord, DM-friendly)
 
-> Been quietly building a Chrome extension for Upwork freelancing — **GigRadar**. It scores every client on your job feed (hire rate, spend, verification) and flags dead jobs before you spend Connects, plus pulls the client's first name from feedback so proposals can actually be personal. Free while in beta: https://github.com/comerade2134/GigRadar. Feedback welcome 🙏
+> Been quietly building a Chrome extension for Upwork freelancing — **GigRadar**. It scores every client on your job feed (hire rate, spend, verification) and flags dead jobs before you spend Connects, plus pulls the client's first name from feedback so proposals can actually be personal. Free on the Chrome Web Store: https://chromewebstore.google.com/detail/gigradar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm (GitHub: https://github.com/comerade2134/GigRadar). Feedback welcome 🙏
 
 ## One-liner (bio/status)
 

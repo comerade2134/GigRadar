@@ -35,7 +35,7 @@ Everything scoring-wise is deterministic — no LLM guessing at "vibes," just ma
 
 Honest limits: it only reads pages you have open (no background scraping of Upwork, by design), it's Chrome-only for now, and Upwork redesigns will occasionally break things until I patch selectors.
 
-It's **free during beta** — install here: https://github.com/comerade2134/GigRadar. Pro features (name extraction + hook generator) will be $9.99 lifetime for the first 50 buyers when it hits the Web Store (then $19.99) — early buyers keep lifetime access at their price, plus input on the roadmap.
+It's **free on the Chrome Web Store**: https://chromewebstore.google.com/detail/gigradar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm (source code: https://github.com/comerade2134/GigRadar). Pro features (name extraction + hook generator) are $9.99 lifetime early-bird for the first 50 freelancers (then $19.99) — early buyers keep lifetime access forever.
 
 Roast it, break it, tell me what's missing. The two features I'm debating next: hire-rate trend over time, and auto-drafting screening question answers (that one's half-built). What would actually save you time?
 

@@ -7,16 +7,16 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/comerade2134/GigRadar/releases"><img src="https://img.shields.io/badge/Release-v0.2.0--beta-10B981?style=for-the-badge&logo=github&logoColor=white" alt="Release v0.2.0"></a>
+  <a href="https://chromewebstore.google.com/detail/gigradar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm"><img src="https://img.shields.io/badge/Chrome_Web_Store-Live-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
+  <a href="https://github.com/comerade2134/GigRadar/releases"><img src="https://img.shields.io/badge/Release-v0.2.0-10B981?style=for-the-badge&logo=github&logoColor=white" alt="Release v0.2.0"></a>
   <a href="https://developer.chrome.com/docs/extensions/mv3/intro/"><img src="https://img.shields.io/badge/Manifest-V3-10B981?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Manifest V3"></a>
   <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
   <a href="https://vitejs.dev/"><img src="https://img.shields.io/badge/Vite-5.4-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"></a>
-  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind-3.4-38B2D1?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-gray?style=for-the-badge" alt="MIT License"></a>
 </p>
 
 <p align="center">
-  <a href="#-quick-install-beta"><strong>Quick Install (Beta)</strong></a> •
+  <a href="https://chromewebstore.google.com/detail/gigradar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm"><strong>Install on Chrome Web Store</strong></a> •
   <a href="https://5eadaf17.gigradar-3tj.pages.dev/"><strong>Live Website</strong></a> •
   <a href="#-features"><strong>Features</strong></a> •
   <a href="#-the-problem--gigradar-solution"><strong>Comparison</strong></a> •
@@ -78,20 +78,28 @@ Bring your own OpenAI or Anthropic API key stored 100% locally in `chrome.storag
 
 ---
 
-## 🚀 Quick Install (Beta)
+## 🚀 Installation
 
-### Option A: Pre-built Package (Recommended — 2 minutes)
+### Option A: Official Chrome Web Store (Recommended — 1 Click)
 
-1. Download **[`gigradar.zip`](https://github.com/comerade2134/GigRadar/releases)** from the latest release.
-2. Unzip `gigradar.zip` to a local folder (e.g., `Downloads/gigradar`).
-3. Open your browser and navigate to `chrome://extensions` (Chrome, Brave, Edge).
-4. Toggle **Developer mode** on in the top-right corner.
-5. Click **Load unpacked** and select the unzipped `gigradar` folder.
-6. Open [Upwork](https://www.upwork.com/nx/search/jobs/) — GigRadar score pills and intel panels will render automatically!
+👉 **[Add to Chrome from Chrome Web Store](https://chromewebstore.google.com/detail/gigradar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm)**
+
+1. Click **Add to Chrome** on the Web Store page.
+2. Open [Upwork](https://www.upwork.com/nx/search/jobs/) — GigRadar badges will appear under every listing automatically!
 
 ---
 
-### Option B: Build from Source
+### Option B: Pre-built Release Package (.zip)
+
+1. Download **[`gigradar.zip`](https://github.com/comerade2134/GigRadar/releases)** from the latest release.
+2. Unzip `gigradar.zip` to a local folder (e.g., `Downloads/gigradar`).
+3. Open `chrome://extensions` in your browser.
+4. Toggle **Developer mode** on (top-right).
+5. Click **Load unpacked** and select the unzipped `gigradar` folder.
+
+---
+
+### Option C: Build from Source
 
 ```bash
 # 1. Clone repository
