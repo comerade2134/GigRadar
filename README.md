@@ -17,7 +17,7 @@
 
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/gigradar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm"><strong>Install on Chrome Web Store</strong></a> •
-  <a href="https://5eadaf17.gigradar-3tj.pages.dev/"><strong>Live Website</strong></a> •
+  <a href="https://gigradar-3tj.pages.dev/"><strong>Live Website</strong></a> •
   <a href="#-features"><strong>Features</strong></a> •
   <a href="#-the-problem--gigradar-solution"><strong>Comparison</strong></a> •
   <a href="#-architecture"><strong>Architecture</strong></a> •
