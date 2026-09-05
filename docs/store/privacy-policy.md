@@ -48,6 +48,6 @@ GigRadar does **NOT** sell, rent, monetize, or transfer your personal data, brow
 
 ### 6. Contact Information
 For questions or privacy concerns, contact:
-- **Developer:** Abdul Monieam
+- **Developer:** Abdu Alsheikh
 - **Email:** keem21@atomicmail.io
 - **Repository:** https://github.com/comerade2134/GigRadar
