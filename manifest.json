@@ -1,14 +1,18 @@
 {
   "manifest_version": 3,
   "name": "GigRadar — Upwork Client Inspector",
-  "version": "0.2.0",
+  "version": "0.3.2",
   "description": "Instant client intent scores, hire-rate red flags, client name extraction and proposal hooks for Upwork freelancers.",
   "minimum_chrome_version": "110",
   "permissions": ["storage", "alarms", "notifications"],
+  "host_permissions": ["https://extensionpay.com/*"],
   "optional_host_permissions": [
     "https://api.openai.com/*",
     "https://api.anthropic.com/*",
-    "https://www.upwork.com/*"
+    "https://www.upwork.com/*",
+    "https://hooks.slack.com/*",
+    "https://discord.com/*",
+    "https://*/*"
   ],
   "action": {
     "default_title": "GigRadar",

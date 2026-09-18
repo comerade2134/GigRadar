@@ -11,6 +11,7 @@ import type {
 } from '../types'
 import { SCAM_FLAG_TEXT } from './red-flags'
 import { TEMPERAMENT_FLAG_TEXT } from './sentiment'
+import { t, type SupportedLocale } from '../i18n'
 
 const WEIGHTS = {
   hireRate: 0.4,
@@ -99,13 +100,17 @@ export function scoreClient(signals: ClientSignals): ScoreResult {
       label: 'Recent hiring',
       weight: WEIGHTS.recency,
       value:
-        signals.daysSinceLastHire == null
-          ? null
-          : recencyValue(signals.daysSinceLastHire),
+        signals.daysSinceLastHire != null
+          ? recencyValue(signals.daysSinceLastHire)
+          : signals.totalSpendUsd === 0 && signals.hireRatePct === 0
+            ? 0
+            : null,
       display:
-        signals.daysSinceLastHire == null
-          ? null
-          : recencyDisplay(signals.daysSinceLastHire)
+        signals.daysSinceLastHire != null
+          ? recencyDisplay(signals.daysSinceLastHire)
+          : signals.totalSpendUsd === 0 && signals.hireRatePct === 0
+            ? 'Never'
+            : null
     }
   ]
 
@@ -230,10 +235,11 @@ export interface FeedAlert {
 export function feedAlert(
   signals: ClientSignals,
   proposalCount: number | null,
-  scamMatched = false
+  scamMatched = false,
+  locale: SupportedLocale = 'en'
 ): FeedAlert | null {
   if (scamMatched) {
-    return { level: "danger", text: "\u{1F6A8} Scam / Off-Platform Risk" }
+    return { level: 'danger', text: `🚨 ${t('alert_scam_warning', locale)}` }
   }
 
   const hire = signals.hireRatePct
@@ -245,22 +251,22 @@ export function feedAlert(
     signals.paymentVerified === true &&
     (spend ?? 0) > 10_000
   ) {
-    return { level: "high", text: "\u{1F525} High-Intent Buyer" }
+    return { level: 'high', text: `🔥 ${t('alert_high_intent', locale)}` }
   }
 
   if (hire != null && hire < 30) {
     return {
-      level: "warn",
-      text: "\u26A0\uFE0F Low Hire Rate (" + Math.round(hire) + "%) \u2014 Connects Risk"
+      level: 'warn',
+      text: `⚠️ ${t('alert_low_hire', locale)} (${Math.round(hire)}%)`
     }
   }
 
   if (proposalCount != null && proposalCount >= 50 && (spend ?? 0) < 10_000) {
-    return { level: "danger", text: "\u26D4 Saturated (50+ Proposals)" }
+    return { level: 'danger', text: `⛔ ${t('alert_saturation', locale)}` }
   }
 
   if (signals.paymentVerified === false) {
-    return { level: "warn", text: "\u26A0\uFE0F Unverified Payment" }
+    return { level: 'warn', text: `⚠️ ${t('alert_unverified', locale)}` }
   }
 
   return null

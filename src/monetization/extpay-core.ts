@@ -15,10 +15,34 @@ export interface CachedLicense {
   checkedAt: number
 }
 
+export function isCachedLicenseFresh(
+  cached: CachedLicense | undefined,
+  now = Date.now()
+): boolean {
+  return (
+    cached != null &&
+    typeof cached.checkedAt === 'number' &&
+    cached.checkedAt <= now &&
+    now - cached.checkedAt < LICENSE_TTL_MS
+  )
+}
+
+export function shouldRefreshLicense(
+  cached: CachedLicense | undefined,
+  force: boolean,
+  now = Date.now()
+): boolean {
+  return force || !isCachedLicenseFresh(cached, now)
+}
+
 export async function readCachedLicense(): Promise<CachedLicense | undefined> {
   if (!extensionContextValid()) return undefined
   const result = await chrome.storage.local.get(LICENSE_KEY)
-  return result[LICENSE_KEY] as CachedLicense | undefined
+  const cached = result[LICENSE_KEY] as Partial<CachedLicense> | undefined
+  if (typeof cached?.paid !== 'boolean' || typeof cached.checkedAt !== 'number') {
+    return undefined
+  }
+  return { paid: cached.paid, checkedAt: cached.checkedAt }
 }
 
 export async function writeCachedLicense(paid: boolean): Promise<void> {

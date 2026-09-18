@@ -1,5 +1,22 @@
-import { SELECTORS, queryAll, queryFirst, queryFirstText } from '../config/selectors'
+import { SELECTORS, queryAll, queryFirstText } from '../config/selectors'
 import type { ActivityStats, ClientSignals, JobBudget, JobMeta, RatingSummary, TrueRateBenchmark } from '../types'
+
+function debugParseFailure(name: string, error: unknown): void {
+  try {
+    console.debug(`[GigRadar] ${name} skipped`, error)
+  } catch {
+    // Debug logging must never become a host-page failure.
+  }
+}
+
+function safeExtract<T>(name: string, fallback: T, extract: () => T): T {
+  try {
+    return extract()
+  } catch (error) {
+    debugParseFailure(name, error)
+    return fallback
+  }
+}
 
 const EXCLUDED_SCOPE_SELECTOR =
   '[data-qa="sidebar"], [data-test="filters-sidebar"], [data-test="search-filters"], aside[class*="filter"]'
@@ -461,25 +478,34 @@ export function normalizeJobId(id: string): string {
 }
 
 export function extractJobId(url: string): string {
+  if (!url) return ''
+  const tilde = /~([0-9a-z]{8,})/i.exec(url)
+  if (tilde) return normalizeJobId(tilde[1])
+
   try {
-    const path = new URL(url).pathname
-    const tilde = /~([0-9a-z]{8,})/i.exec(path)
-    if (tilde) return normalizeJobId(tilde[1])
+    const path = new URL(url, 'https://www.upwork.com').pathname
     const segment = path.split('/').filter(Boolean).pop()
     return normalizeJobId(segment ?? path)
   } catch {
-    return normalizeJobId(url)
+    const segment = url.split(/[/?#]/).filter(Boolean).pop()
+    return normalizeJobId(segment ?? url)
   }
 }
 
 export function matchHireRate(text: string): number | null {
   const patterns: RegExp[] = [
     /(\d+(?:\.\d+)?)\s*%\s*hire\s*rate/i,
-    /hire\s*rate[^%\n]{0,24}(\d+(?:\.\d+)?)\s*%/i
+    /hire\s*rate[^%\n]{0,24}(\d+(?:\.\d+)?)\s*%/i,
+    /\b0\s+hires\b/i,
+    /\bno\s+hires\s+yet\b/i,
+    /\b0\s+jobs\s+posted\b/i
   ]
   for (const pattern of patterns) {
     const match = pattern.exec(text)
     if (match) {
+      if (/\b(?:0\s+hires|no\s+hires|0\s+jobs\s+posted)\b/i.test(match[0])) {
+        return 0
+      }
       return Math.min(Math.max(parseFloat(match[1]), 0), 100)
     }
   }
@@ -509,7 +535,9 @@ function labeledSpend(text: string): number | null {
     /\$\s*([\d,]+(?:\.\d+)?[kKmM]?)\s*total\s+spent/i,
     /(\$[\d,.]+[km]?)\s+total\s+spent/i,
     /(?:total\s+spent|total\s+spend|lifetime\s+spent)[^\d$]{0,20}\$\s?([\d.,]+)\s?(k|m)?\b/i,
-    /\$\s?([\d.,]+)\s?(k|m)?\b[^$\n]{0,16}\bspent\b/i
+    /\$\s?([\d.,]+)\s?(k|m)?\b[^$\n]{0,16}\bspent\b/i,
+    /\$\s*([\d,]+(?:\.\d+)?[kKmM]?)\s*(?:USD\s+)?spent/i,
+    /\bspent\s*[:\-]?\s*\$\s*([\d,]+(?:\.\d+)?[kKmM]?)/i
   ]
   for (const pattern of patterns) {
     const match = pattern.exec(text)
@@ -523,6 +551,10 @@ function labeledSpend(text: string): number | null {
 }
 
 export function extractClientSpend(scope: HTMLElement): number | null {
+  return safeExtract('extractClientSpend', null, () => extractClientSpendUnsafe(scope))
+}
+
+function extractClientSpendUnsafe(scope: HTMLElement): number | null {
   const spendEl = queryScoped(scope, SPEND_ELEMENT_SELECTOR)
   if (spendEl) {
     const direct = parseMoney(spendEl.innerText)
@@ -541,6 +573,10 @@ export function extractClientSpend(scope: HTMLElement): number | null {
 }
 
 export function detectPaymentVerified(root: ParentNode): boolean | null {
+  return safeExtract('detectPaymentVerified', null, () => detectPaymentVerifiedUnsafe(root))
+}
+
+function detectPaymentVerifiedUnsafe(root: ParentNode): boolean | null {
   const badge = root.querySelector<HTMLElement>(
     SELECTORS.paymentVerified.join(', ')
   )
@@ -572,6 +608,10 @@ export function detectPaymentVerified(root: ParentNode): boolean | null {
 }
 
 export function collectFeedbacks(root: HTMLElement): string[] {
+  return safeExtract('collectFeedbacks', [], () => collectFeedbacksUnsafe(root))
+}
+
+function collectFeedbacksUnsafe(root: HTMLElement): string[] {
   const section = queryScoped(root, FEEDBACK_SECTION_SELECTOR)
   if (!section) return []
 
@@ -611,6 +651,10 @@ function countFromPool(pool: readonly string[], label: RegExp): number | null {
 }
 
 export function extractActivityStats(scope: HTMLElement): ActivityStats | null {
+  return safeExtract('extractActivityStats', null, () => extractActivityStatsUnsafe(scope))
+}
+
+function extractActivityStatsUnsafe(scope: HTMLElement): ActivityStats | null {
   const lines = (scope.innerText ?? '')
     .split('\n')
     .map((line) => line.trim())
@@ -638,6 +682,10 @@ export function extractActivityStats(scope: HTMLElement): ActivityStats | null {
 }
 
 export function parseJobBudget(scope: HTMLElement): JobBudget | null {
+  return safeExtract('parseJobBudget', null, () => parseJobBudgetUnsafe(scope))
+}
+
+function parseJobBudgetUnsafe(scope: HTMLElement): JobBudget | null {
   const text = scope.innerText ?? ''
   if (!text.includes('$')) return null
 
@@ -707,6 +755,10 @@ function median(values: number[]): number | null {
 }
 
 export function computeTrueRate(scope: HTMLElement): TrueRateBenchmark | null {
+  return safeExtract('computeTrueRate', null, () => computeTrueRateUnsafe(scope))
+}
+
+function computeTrueRateUnsafe(scope: HTMLElement): TrueRateBenchmark | null {
   const items = queryAll(scope, SELECTORS.feedbackItem).filter((item) =>
     (item.textContent ?? '').includes('$')
   )
@@ -762,6 +814,10 @@ function daysFromTimeEl(el: HTMLTimeElement): number | null {  const iso = el.ge
 }
 
 export function latestFeedbackDays(root: HTMLElement): number | null {
+  return safeExtract('latestFeedbackDays', null, () => latestFeedbackDaysUnsafe(root))
+}
+
+function latestFeedbackDaysUnsafe(root: HTMLElement): number | null {
   const times = Array.from(root.querySelectorAll<HTMLTimeElement>('time'))
   let minDays: number | null = null
   for (const el of times) {
@@ -787,33 +843,125 @@ export interface CardParseResult {
 }
 
 export function parseCardProfile(card: HTMLElement): CardParseResult | null {
+  return safeExtract('parseCardProfile', null, () => parseCardProfileUnsafe(card))
+}
+
+const INVALID_JOB_TITLES = new Set([
+  'open job in a new window',
+  'open job in new window',
+  'open in a new window',
+  'open in new window',
+  'open in a new tab',
+  'open in new tab',
+  'save job',
+  'saved',
+  'saved job',
+  'unsave job',
+  'share',
+  'share job',
+  'upwork job',
+  'apply now',
+  'submit proposal',
+  'close',
+  'dismiss'
+])
+
+export function isInvalidJobTitle(title: string | null | undefined): boolean {
+  if (!title) return true
+  const clean = title.trim().toLowerCase()
+  if (clean.length < 3) return true
+  for (const bad of INVALID_JOB_TITLES) {
+    if (clean === bad || clean.startsWith(bad)) return true
+  }
+  return false
+}
+
+export function findCardTitleLink(
+  card: HTMLElement
+): { link: HTMLAnchorElement; title: string } | null {
+  const headingAnchors = card.querySelectorAll<HTMLAnchorElement>(
+    'h2 a[href*="/jobs/"], h3 a[href*="/jobs/"], h4 a[href*="/jobs/"], [data-test*="title"] a, .job-tile-title a, a[data-test="job-tile-title-link"]'
+  )
+  for (const a of Array.from(headingAnchors)) {
+    const text = a.textContent?.trim() ?? ''
+    if (!isInvalidJobTitle(text)) {
+      return { link: a, title: text }
+    }
+  }
+
+  for (const selector of SELECTORS.titleLink) {
+    try {
+      const candidates = card.querySelectorAll<HTMLElement>(selector)
+      for (const el of Array.from(candidates)) {
+        const anchor =
+          el instanceof HTMLAnchorElement
+            ? el
+            : el.querySelector<HTMLAnchorElement>('a')
+        const text = (anchor?.textContent ?? el.textContent)?.trim() ?? ''
+        if (!isInvalidJobTitle(text) && anchor?.href) {
+          return { link: anchor, title: text }
+        }
+      }
+    } catch {
+      continue
+    }
+  }
+
+  return null
+}
+
+function parseCardProfileUnsafe(card: HTMLElement): CardParseResult | null {
   if (!notInExcluded(card)) return null
 
-  const titleLink = queryFirst(card, SELECTORS.titleLink)
-  const title = titleLink?.textContent?.trim()
-  if (!titleLink || !title) return null
+  const titleInfo = findCardTitleLink(card)
+  if (!titleInfo) return null
 
-  const href =
-    titleLink instanceof HTMLAnchorElement
-      ? titleLink.href
-      : (titleLink.querySelector('a') as HTMLAnchorElement | null)?.href ?? ''
+  const { link: titleLink, title } = titleInfo
+  const href = titleLink.href
 
-  const descriptionSnippet =
+  const cardText = card.innerText ?? ''
+
+  const rawDescription =
     queryFirstText(card, SELECTORS.jobDescription)?.slice(0, 400) ?? ''
 
+  const skillElements = card.querySelectorAll<HTMLElement>(
+    '[data-test="attr-item"], [data-test="token_clamp"] span, .air3-token, [class*="skill"], [data-test="Skill"]'
+  )
+  const skillsText = Array.from(skillElements)
+    .map((el) => el.textContent?.trim())
+    .filter(Boolean)
+    .join(', ')
+
+  const descriptionSnippet = skillsText
+    ? `${rawDescription} [Skills: ${skillsText}]`.slice(0, 600)
+    : rawDescription
+
+  const selectorHire = parsePercent(queryFirstText(card, SELECTORS.hireRate))
+  const hireRatePct = selectorHire != null ? selectorHire : matchHireRate(cardText)
+
   const signals: ClientSignals = {
-    hireRatePct: parsePercent(queryFirstText(card, SELECTORS.hireRate)),
+    hireRatePct,
     totalSpendUsd: extractClientSpend(card),
     paymentVerified: detectPaymentVerified(card),
     daysSinceLastHire: null
   }
 
+  const selectorProposals = parseProposalCount(queryFirstText(card, SELECTORS.proposals))
+  const proposalCount =
+    selectorProposals != null
+      ? selectorProposals
+      : parseProposalCount(/[^\n]*\bproposals?\b[^\n]*/i.exec(cardText)?.[0] ?? null)
+
+  const selectorPosted = queryFirstText(card, SELECTORS.postedTime)
+  const postedText =
+    selectorPosted ?? /^[^\n]*posted[^\n]*$/im.exec(cardText)?.[0]?.trim().slice(0, 60) ?? null
+
   const meta: JobMeta = {
     jobId: extractJobId(href) || title.slice(0, 48),
     title,
     url: href,
-    proposalCount: parseProposalCount(queryFirstText(card, SELECTORS.proposals)),
-    postedText: queryFirstText(card, SELECTORS.postedTime),
+    proposalCount,
+    postedText,
     descriptionSnippet,
     feedbacks: []
   }
@@ -822,13 +970,23 @@ export function parseCardProfile(card: HTMLElement): CardParseResult | null {
 }
 
 export function parseDrawerProfile(drawer: HTMLElement): CardParseResult | null {
+  return safeExtract('parseDrawerProfile', null, () => parseDrawerProfileUnsafe(drawer))
+}
+
+function parseDrawerProfileUnsafe(drawer: HTMLElement): CardParseResult | null {
   if (!drawer.isConnected || !notInExcluded(drawer)) return null
 
-  const titleEl =
-    queryScoped(drawer, 'h1') ??
-    queryScoped(drawer, 'h2') ??
-    queryFirst(drawer, SELECTORS.titleLink)
-  const title = titleEl?.textContent?.trim() ?? ''
+  let title = ''
+  const headingEl = queryScoped(drawer, 'h1') ?? queryScoped(drawer, 'h2')
+  const headingText = headingEl?.textContent?.trim() ?? ''
+  if (!isInvalidJobTitle(headingText)) {
+    title = headingText
+  } else {
+    const cardTitle = findCardTitleLink(drawer)
+    if (cardTitle && !isInvalidJobTitle(cardTitle.title)) {
+      title = cardTitle.title
+    }
+  }
 
   const anchor = drawer.querySelector<HTMLAnchorElement>('a[href*="/jobs/"]')
   const href = anchor?.href ?? window.location.href
@@ -900,6 +1058,16 @@ export interface DetailEnrichment {
 export function parseContainerEnrichment(
   container: HTMLElement
 ): DetailEnrichment | null {
+  return safeExtract(
+    'parseContainerEnrichment',
+    null,
+    () => parseContainerEnrichmentUnsafe(container)
+  )
+}
+
+function parseContainerEnrichmentUnsafe(
+  container: HTMLElement
+): DetailEnrichment | null {
   if (!container.isConnected || !notInExcluded(container)) return null
 
   const clientBlock = findClientBlockVerified(container)
@@ -942,6 +1110,10 @@ export function parseContainerEnrichment(
 }
 
 export function findJobDetailsContainer(): HTMLElement | null {
+  return safeExtract('findJobDetailsContainer', null, findJobDetailsContainerUnsafe)
+}
+
+function findJobDetailsContainerUnsafe(): HTMLElement | null {
   for (const selector of DETAIL_ROOT_CHAIN) {
     try {
       for (const el of Array.from(document.querySelectorAll<HTMLElement>(selector))) {

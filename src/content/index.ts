@@ -5,36 +5,96 @@ import { addConnectsSaved, CONNECTS_PER_SKIP } from '../engine/metrics'
 import { extractClientName } from '../engine/name-extractor'
 import { scanScamSignals } from '../engine/red-flags'
 import { analyzeSentiment } from '../engine/sentiment'
+import { resolveCurrentIntel } from '../engine/active-intel'
+import { mergeIntelCacheEntry, type IntelCacheEntry } from '../engine/intel-cache'
+import { buildClientDossier } from '../engine/client-dossier'
 import {
   extractJobId,
   findClientBlockVerified,
   findJobDetailsContainer,
   findOpenDrawer,
   isDrawerRoute,
+  isInvalidJobTitle,
   parseCardProfile,
   parseContainerEnrichment,
   parseDrawerProfile,
   parseProposalCount,
+  normalizeJobId,
   resolveDrawerTarget,
   waitForDrawerClient,
   type DrawerClientWaiter
 } from './parse'
 import type { CardParseResult } from './parse'
-import { mountBadge } from './badge'
-import { detectGuestMode, mountInlineCard, openDetailModal } from './modal'
+import { mountBadge, type TeamAlertInfo } from './badge'
+import {
+  closeDetailModal,
+  isDetailModalOpen,
+  mountInlineCard,
+  openDetailModal
+} from './modal'
 import type {
   ActivityStats,
   ClientSignals,
   EnrichmentData,
   JobMeta,
-  TrueRateBenchmark
+  TeamJobActivity,
+  TrueRateBenchmark,
+  UserProfile
 } from '../types'
+import { getLanguage, subscribeLanguageChange, type SupportedLocale } from '../i18n'
+import { isProposalPage, scanProposalPage } from './proposal-autofill'
+import {
+  getTeamActivities,
+  formatTimeAgo,
+  TEAM_ACTIVITIES_KEY
+} from '../cloud/team-tracker'
+import { getUserProfile, ACCOUNT_STORAGE_KEY } from '../cloud/account'
 
 const DETAIL_TRIGGER_ID = 'gigradar-detail-trigger'
 
-const skipSeen = new WeakSet<HTMLElement>()
-const skipCounted = new WeakSet<HTMLElement>()
+const DWELL_THRESHOLD_MS = 1000
+const SKIPPED_JOBS_KEY = 'gigradar:skipped_jobs'
+const SKIPPED_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
+
+const cardVisibleSince = new WeakMap<HTMLElement, number>()
+const countedJobIds = new Set<string>()
 let skipObserver: IntersectionObserver | null = null
+
+async function hasCountedJobRecently(jobId: string): Promise<boolean> {
+  if (countedJobIds.has(jobId)) return true
+  if (!extensionContextValid()) return false
+  try {
+    const data = await chrome.storage.local.get(SKIPPED_JOBS_KEY)
+    const record = (data[SKIPPED_JOBS_KEY] || {}) as Record<string, number>
+    const now = Date.now()
+    if (record[jobId] && now - record[jobId] < SKIPPED_EXPIRY_MS) {
+      countedJobIds.add(jobId)
+      return true
+    }
+  } catch {
+    return false
+  }
+  return false
+}
+
+async function markJobCounted(jobId: string): Promise<void> {
+  countedJobIds.add(jobId)
+  if (!extensionContextValid()) return
+  try {
+    const data = await chrome.storage.local.get(SKIPPED_JOBS_KEY)
+    const record = (data[SKIPPED_JOBS_KEY] || {}) as Record<string, number>
+    const now = Date.now()
+    record[jobId] = now
+    for (const [id, ts] of Object.entries(record)) {
+      if (now - ts > SKIPPED_EXPIRY_MS) {
+        delete record[id]
+      }
+    }
+    await chrome.storage.local.set({ [SKIPPED_JOBS_KEY]: record })
+  } catch {
+    // ignore
+  }
+}
 
 function ensureSkipObserver(): void {
   if (skipObserver) return
@@ -42,13 +102,30 @@ function ensureSkipObserver(): void {
     (entries) => {
       for (const entry of entries) {
         const el = entry.target as HTMLElement
+        const now = Date.now()
+
         if (entry.isIntersecting) {
-          skipSeen.add(el)
+          if (!cardVisibleSince.has(el)) {
+            cardVisibleSince.set(el, now)
+          }
           continue
         }
-        if (skipSeen.has(el) && !skipCounted.has(el)) {
-          skipCounted.add(el)
-          void addConnectsSaved(CONNECTS_PER_SKIP)
+
+        // Card scrolled out of viewport. Check if user dwelt for >= 1.0s before scrolling away.
+        const enterTime = cardVisibleSince.get(el)
+        if (enterTime !== undefined) {
+          cardVisibleSince.delete(el)
+          const dwell = now - enterTime
+          const jobId = el.dataset.gigradarJobId
+          if (dwell >= DWELL_THRESHOLD_MS && jobId) {
+            void (async () => {
+              const alreadyCounted = await hasCountedJobRecently(jobId)
+              if (!alreadyCounted) {
+                await markJobCounted(jobId)
+                await addConnectsSaved(CONNECTS_PER_SKIP)
+              }
+            })()
+          }
         }
       }
     },
@@ -75,6 +152,62 @@ let currentDrawerKey: string | null = null
 // can still seed the panel with the card's stats.
 const CARD_CACHE_LIMIT = 48
 const cardParses = new Map<string, CardParseResult>()
+const badgeEntries = new Map<string, { card: HTMLElement; host: HTMLElement }>()
+
+let currentLocale: SupportedLocale = 'en'
+void getLanguage().then((loc) => {
+  currentLocale = loc
+})
+
+subscribeLanguageChange((newLocale) => {
+  currentLocale = newLocale
+  for (const [, entry] of badgeEntries.entries()) {
+    if (entry.card.isConnected) {
+      entry.host.remove()
+    }
+  }
+  badgeEntries.clear()
+  scanFeed()
+})
+
+let cachedTeamActivities: TeamJobActivity[] = []
+let currentUserId = 'local_anonymous'
+
+void getUserProfile().then((p) => {
+  currentUserId = p.userId || 'local_anonymous'
+})
+void getTeamActivities().then((acts) => {
+  cachedTeamActivities = acts
+})
+
+if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== 'local') return
+    let needsRescan = false
+
+    if (changes[TEAM_ACTIVITIES_KEY]) {
+      cachedTeamActivities = (changes[TEAM_ACTIVITIES_KEY].newValue as TeamJobActivity[]) || []
+      needsRescan = true
+    }
+    if (changes[ACCOUNT_STORAGE_KEY]) {
+      const p = changes[ACCOUNT_STORAGE_KEY].newValue as UserProfile | undefined
+      if (p) {
+        currentUserId = p.userId || 'local_anonymous'
+      }
+      needsRescan = true
+    }
+
+    if (needsRescan) {
+      for (const [, entry] of badgeEntries.entries()) {
+        if (entry.card.isConnected) {
+          entry.host.remove()
+        }
+      }
+      badgeEntries.clear()
+      scanFeed()
+    }
+  })
+}
 
 function rememberCardParse(parsed: CardParseResult): void {
   if (!parsed.meta.jobId) return
@@ -138,7 +271,6 @@ function pickTrueRate(
 }
 
 const INTEL_CACHE_PREFIX = 'gigradar:intel:'
-let lastCachedJobId: string | null = null
 let cacheWriteCount = 0
 
 async function pruneIntelCache(): Promise<void> {
@@ -162,19 +294,14 @@ async function pruneIntelCache(): Promise<void> {
 async function saveIntelCache(data: EnrichmentData): Promise<void> {
   if (!extensionContextValid()) return
   const jobId = data.meta.jobId
-  if (!jobId || jobId === lastCachedJobId) return
-  lastCachedJobId = jobId
+  if (!jobId) return
 
   try {
-    await chrome.storage.local.set({
-      [`${INTEL_CACHE_PREFIX}${jobId}`]: {
-        title: data.meta.title,
-        url: data.meta.url,
-        description: data.meta.descriptionSnippet,
-        clientName: data.nameGuess?.name ?? null,
-        savedAt: Date.now()
-      }
-    })
+    const key = `${INTEL_CACHE_PREFIX}${jobId}`
+    const stored = await chrome.storage.local.get(key)
+    const existing = stored[key] as IntelCacheEntry | undefined
+    const next = mergeIntelCacheEntry(existing, data, Date.now())
+    await chrome.storage.local.set({ [key]: next })
     cacheWriteCount += 1
     if (cacheWriteCount % 25 === 0) await pruneIntelCache()
   } catch {
@@ -218,6 +345,12 @@ function buildEnrichment(parsed: CardParseResult): EnrichmentData {
     scamMatched: scam.matched
   })
 
+  const dossier = buildClientDossier({
+    feedbacks,
+    description: `${parsed.meta.title}\n${parsed.meta.descriptionSnippet}`,
+    contractTitles: [parsed.meta.title]
+  })
+
   return {
     meta: { ...parsed.meta, feedbacks },
     signals,
@@ -228,23 +361,164 @@ function buildEnrichment(parsed: CardParseResult): EnrichmentData {
     budget,
     trueRate,
     sentiment,
-    rating
+    rating,
+    dossier
   }
 }
 
 function setActive(data: EnrichmentData): void {
   activeData = data
   refreshTrigger()
+  const badgeEntry = badgeEntries.get(data.meta.jobId)
+  if (badgeEntry?.card.isConnected) {
+    badgeEntry.host.remove()
+    const host = mountBadge(
+      badgeEntry.card,
+      {
+        score: data.score.scored ? data.score.score : null,
+        tier: data.score.scored ? data.score.tier : null,
+        flagCount: data.flags.length,
+        provisional: Object.values(data.signals).some((value) => value == null),
+        alert: feedAlert(data.signals, data.meta.proposalCount, false, currentLocale),
+        locale: currentLocale
+      },
+      () => {
+        const current = resolveCurrentIntel(activeData, data.meta.jobId, data)
+        openDetailModal({ ...current }, { locale: currentLocale })
+      }
+    )
+    badgeEntries.set(data.meta.jobId, { card: badgeEntry.card, host })
+  } else if (badgeEntry) {
+    badgeEntries.delete(data.meta.jobId)
+  }
+  const inlineHost = document.querySelector<HTMLElement>('[data-gigradar-inline]')
+  if (
+    inlineHost?.dataset.gigradarJobId === data.meta.jobId &&
+    inlineHost.parentElement?.isConnected
+  ) {
+    mountInlineCard(inlineHost.parentElement, { ...data }, () => {
+      const current = resolveCurrentIntel(activeData, data.meta.jobId, data)
+      openDetailModal({ ...current }, { locale: currentLocale })
+    })
+  }
   void saveIntelCache(data)
 }
 
+function pruneDisconnectedBadges(): void {
+  for (const [jobId, entry] of badgeEntries.entries()) {
+    if (!entry.card.isConnected || !entry.host.isConnected) {
+      if (skipObserver && entry.host) {
+        try {
+          skipObserver.unobserve(entry.host)
+        } catch {
+          // host may already be gone
+        }
+      }
+      badgeEntries.delete(jobId)
+    }
+  }
+}
+
+function getDistinctJobIds(el: HTMLElement): Set<string> {
+  const links = el.querySelectorAll<HTMLAnchorElement>('a[href*="/jobs/"]')
+  const ids = new Set<string>()
+  for (const a of Array.from(links)) {
+    const id = extractJobId(a.href)
+    if (id) ids.add(id)
+  }
+  return ids
+}
+
+const CARD_CONTAINER_SELECTOR = [
+  'article.job-tile-responsive',
+  'article.job-tile',
+  '[data-test="job-tile"]',
+  '[data-test="JobTile"]',
+  '[data-qa="job-tile"]',
+  'section.job-tile-responsive',
+  '[data-ev-label="search_result_item"]',
+  'article',
+  '.air3-card'
+].join(', ')
+
+function findJobCardForLink(link: HTMLElement): HTMLElement | null {
+  const card = link.closest<HTMLElement>(CARD_CONTAINER_SELECTOR)
+  if (card && card !== document.body && card.tagName !== 'MAIN') {
+    const outer = card.parentElement?.closest<HTMLElement>(CARD_CONTAINER_SELECTOR)
+    if (
+      outer &&
+      outer !== document.body &&
+      outer.tagName !== 'MAIN' &&
+      getDistinctJobIds(outer).size === 1
+    ) {
+      return outer
+    }
+    return card
+  }
+  return null
+}
+
 function scanFeed(): void {
-  const cards = queryAll(document.body, SELECTORS.jobCard)
+  pruneDisconnectedBadges()
+
+  // 1. Candidate cards from standard selector chains
+  const queriedCards = queryAll(document.body, SELECTORS.jobCard)
+
+  // 2. Discover cards directly from all job heading links on page as fallback
+  const fallbackCards: HTMLElement[] = []
+  const jobLinks = document.querySelectorAll<HTMLAnchorElement>(
+    'h2 a[href*="/jobs/"], h3 a[href*="/jobs/"], [data-test*="title"] a[href*="/jobs/"], a[data-test="job-tile-title-link"], .job-tile-title a'
+  )
+  for (const link of Array.from(jobLinks)) {
+    // If link is already inside an enriched card with an active badge, skip immediately
+    const existingHost = link.closest('[data-gigradar-card="true"]')
+    if (existingHost && existingHost.querySelector('[data-gigradar-badge]')) {
+      continue
+    }
+    const card = findJobCardForLink(link)
+    if (card) fallbackCards.push(card)
+  }
+
+  const allRaw = Array.from(new Set([...queriedCards, ...fallbackCards]))
+
+  // FAST SKIP: Discard any card that is already processed and has an active mounted badge
+  const unmountedRaw = allRaw.filter((card) => {
+    if (!card.isConnected) return false
+    if (card.dataset.gigradarCard === 'true' && card.querySelector('[data-gigradar-badge]')) {
+      return false
+    }
+    return true
+  })
+
+  if (unmountedRaw.length === 0) return
+
+  // 3. Keep strictly cards that contain links for EXACTLY 1 distinct job ID
+  // (instantly eliminates feed wrappers, search result containers, sections with 10+ jobs)
+  const singleJobCards = unmountedRaw.filter((card) => {
+    return card.isConnected && getDistinctJobIds(card).size === 1
+  })
+
+  // 4. For nested containers of the same job (e.g. outer <article> and inner <section>),
+  // keep the outermost container
+  const cards = singleJobCards.filter((card) => {
+    return !singleJobCards.some((other) => other !== card && other.contains(card))
+  })
+
   for (const card of cards) {
-    if (!card.isConnected || card.querySelector('[data-gigradar-badge]')) continue
+    if (!card.isConnected) continue
+    if (card.querySelector('[data-gigradar-badge]')) continue
 
     const parsed = parseCardProfile(card)
-    if (!parsed) continue
+    if (!parsed || !parsed.meta.jobId) continue
+
+    // If an active badge already exists for this exact job, don't mount another
+    const existing = badgeEntries.get(parsed.meta.jobId)
+    if (existing?.host.isConnected && existing.card.isConnected) {
+      continue
+    }
+
+    card.dataset.gigradarCard = 'true'
+    card.dataset.gigradarJobId = parsed.meta.jobId
     rememberCardParse(parsed)
 
     const signals = parsed.signals
@@ -262,7 +536,24 @@ function scanFeed(): void {
       proposalCount: parsed.meta.proposalCount,
       scamMatched: scam.matched
     })
-    const alert = feedAlert(signals, parsed.meta.proposalCount, scam.matched)
+    const alert = feedAlert(signals, parsed.meta.proposalCount, scam.matched, currentLocale)
+
+    const normalizedId = normalizeJobId(parsed.meta.jobId).toLowerCase()
+    const teamActivity = cachedTeamActivities.find(
+      (item) =>
+        normalizeJobId(item.jobId).toLowerCase() === normalizedId &&
+        item.expiresAt > Date.now() &&
+        item.status !== 'passed'
+    )
+
+    let teamAlert: TeamAlertInfo | null = null
+    if (teamActivity && teamActivity.memberId !== currentUserId) {
+      teamAlert = {
+        memberName: teamActivity.memberName,
+        status: teamActivity.status as 'drafting' | 'applied' | 'viewing',
+        timeAgo: formatTimeAgo(teamActivity.updatedAt)
+      }
+    }
 
     const host = mountBadge(
       card,
@@ -270,16 +561,21 @@ function scanFeed(): void {
         score: preview?.score ?? null,
         tier: preview?.tier ?? null,
         flagCount: previewFlags.length,
-        alert
+        provisional: Object.values(signals).some((value) => value == null),
+        alert,
+        teamAlert,
+        locale: currentLocale
       },
       () => {
         const fresh = parseCardProfile(card) ?? parsed
-        openDetailModal(buildEnrichment(fresh))
+        openDetailModal(buildEnrichment(fresh), { locale: currentLocale })
       }
     )
+    badgeEntries.set(parsed.meta.jobId, { card, host })
 
     if (previewFlags.length > 0) {
       ensureSkipObserver()
+      host.dataset.gigradarJobId = parsed.meta.jobId
       skipObserver!.observe(host)
     }
   }
@@ -420,6 +716,11 @@ function mergeTick(target: HTMLElement): void {
     ].join('#')
 
     if (after !== before) {
+      const dossier = buildClientDossier({
+        feedbacks,
+        description: `${activeData.meta.title}\n${activeData.meta.descriptionSnippet}`,
+        contractTitles: [activeData.meta.title]
+      })
       const refreshed: EnrichmentData = {
         meta: { ...activeData.meta, proposalCount, feedbacks },
         signals: merged,
@@ -430,27 +731,20 @@ function mergeTick(target: HTMLElement): void {
         budget,
         trueRate,
         sentiment,
-        rating
+        rating,
+        dossier
       }
       setActive(refreshed)
 
       if (document.querySelector('[data-gigradar-modal]') != null) {
-        openDetailModal({ ...refreshed }, { docked: true })
-      }
-      const inlineHost = document.querySelector<HTMLElement>('[data-gigradar-inline]')
-      if (inlineHost?.parentElement?.isConnected) {
-        mountInlineCard(
-          inlineHost.parentElement,
-          { ...refreshed },
-          () => openDetailModal({ ...refreshed }, {})
-        )
+        openDetailModal({ ...refreshed }, { docked: true, settled: true })
       }
     }
   }
 }
 
 function resolveScanVerdict(): void {
-  if (!activeData || activeData.score.scored) return
+  if (!activeData) return
   if (document.querySelector('[data-gigradar-modal]') == null) return
   // Scan window closed with nothing found — replace the SCANNING state with
   // an honest NO DATA instead of leaving it pending forever.
@@ -532,7 +826,7 @@ function seedDrawerParse(parsed: CardParseResult): CardParseResult {
   }
 }
 
-function handleNativeDrawer(drawer: HTMLElement): void {
+function handleNativeDrawer(drawer: HTMLElement, expanded = false): void {
   const parsed = parseDrawerProfile(drawer)
 
   let data: EnrichmentData | null = null
@@ -546,16 +840,21 @@ function handleNativeDrawer(drawer: HTMLElement): void {
   if (!data) return
 
   setActive(data)
-  openDetailModal({ ...data! }, { docked: true, settled: detectGuestMode() })
+  openDetailModal(
+    { ...data! },
+    { docked: true, scanning: true, expanded }
+  )
 
   void (async () => {
     const sidebar = (await findSidebarWithRetry()) ?? findClientBlockVerified(drawer)
     if (!drawer.isConnected || !document.body.contains(drawer)) return
 
     if (sidebar) {
-      mountInlineCard(sidebar, data!, () =>
-        openDetailModal({ ...data! }, {})
-      )
+      const current = resolveCurrentIntel(activeData, data!.meta.jobId, data!)
+      mountInlineCard(sidebar, current, () => {
+        const current = resolveCurrentIntel(activeData, data!.meta.jobId, data!)
+        openDetailModal({ ...current }, {})
+      })
     }
   })()
 
@@ -583,9 +882,10 @@ function scanForDrawer(): void {
   if (inlineMissing && dockedMissing && activeData) {
     const sidebar = firstVisible(SIDEBAR_CHAIN)
     if (sidebar) {
-      mountInlineCard(sidebar, activeData, () =>
-        openDetailModal({ ...activeData! }, {})
-      )
+      mountInlineCard(sidebar, activeData, () => {
+        const current = resolveCurrentIntel(activeData, activeData!.meta.jobId, activeData!)
+        openDetailModal({ ...current }, {})
+      })
     }
   }
 }
@@ -606,6 +906,11 @@ function openFromDetailPage(): void {
     signalsPatch: {},
     feedbacks: []
   }
+  const jobId = extractJobId(window.location.href)
+  const known =
+    activeData?.meta.jobId === jobId
+      ? activeData
+      : cardParses.get(jobId) ?? recentClickedCard()
   const containerText = container.innerText ?? ''
   const proposalsLine = /[^\n]*\bproposals?\b[^\n]*/i.exec(containerText)?.[0]
   const postedLine = /^[^\n]*posted[^\n]*$/im.exec(containerText)?.[0]
@@ -619,25 +924,38 @@ function openFromDetailPage(): void {
     totalSpendUsd: null,
     paymentVerified: null,
     daysSinceLastHire: null,
+    ...(known?.signals ?? {}),
     ...detail.signalsPatch
   }
+
+  const feedbacks =
+    detail.feedbacks.length > 0 ? detail.feedbacks : (known?.meta.feedbacks ?? [])
 
   const scam = scanScamSignals(
     `${containerText}\n${(descriptionEl?.textContent ?? '').slice(0, 2000)}`
   )
-  const sentiment = analyzeSentiment(detail.feedbacks)
+  const sentiment = analyzeSentiment(feedbacks)
+
+  const rawH1 = container.querySelector('h1')?.textContent?.trim()
+  const detailTitle =
+    (!isInvalidJobTitle(rawH1) ? rawH1 : null) ||
+    known?.meta.title ||
+    document.title ||
+    'Upwork job'
+  const title = !isInvalidJobTitle(detailTitle) ? detailTitle : 'Upwork job'
 
   const meta: JobMeta = {
-    jobId: extractJobId(window.location.href),
-    title:
-      container.querySelector('h1')?.textContent?.trim() ||
-      document.title ||
-      'Upwork job',
+    jobId,
+    title,
     url: window.location.href,
-    proposalCount: parseProposalCount(proposalsLine ?? null),
+    proposalCount:
+      parseProposalCount(proposalsLine ?? null) ?? known?.meta.proposalCount ?? null,
     postedText: postedLine ? postedLine.trim().slice(0, 60) : null,
-    descriptionSnippet: (descriptionEl?.textContent ?? '').trim().slice(0, 400),
-    feedbacks: detail.feedbacks
+    descriptionSnippet:
+      (descriptionEl?.textContent ?? '').trim().slice(0, 400) ||
+      known?.meta.descriptionSnippet ||
+      '',
+    feedbacks
   }
 
   const score = scoreClient(signals)
@@ -650,21 +968,27 @@ function openFromDetailPage(): void {
     sentiment,
     scamMatched: scam.matched
   })
+  const dossier = buildClientDossier({
+    feedbacks,
+    description: `${meta.title}\n${meta.descriptionSnippet}`,
+    contractTitles: [meta.title]
+  })
   const data: EnrichmentData = {
     meta,
     signals,
     score,
     flags,
     nameGuess: null,
-    activity: detail.activity,
-    budget: detail.budget,
-    trueRate: detail.trueRate,
+    activity: detail.activity ?? known?.activity ?? null,
+    budget: detail.budget ?? known?.budget ?? null,
+    trueRate: pickTrueRate(known?.trueRate, detail.trueRate),
     sentiment,
-    rating: detail.rating ?? null
+    rating: detail.rating ?? known?.rating ?? null,
+    dossier
   }
 
   setActive(data)
-  openDetailModal(data, { docked: true, settled: detectGuestMode() })
+  openDetailModal(data, { docked: true, scanning: true })
   startLazyRefresh(container)
 }
 
@@ -694,7 +1018,7 @@ function ensureTrigger(): HTMLElement {
       'position:fixed',
       'right:18px',
       'bottom:18px',
-      'z-index:2147483645',
+      'z-index:99998',
       'display:none',
       'align-items:center',
       'gap:8px',
@@ -730,10 +1054,12 @@ function ensureTrigger(): HTMLElement {
       // the pill becomes a self-healing entry point into the full pipeline.
       const drawer = findOpenDrawer()
       if (drawer) {
-        handleNativeDrawer(drawer)
+        handleNativeDrawer(drawer, true)
         return
       }
-      if (activeData) openDetailModal({ ...activeData }, { docked: true })
+      if (activeData) {
+        openDetailModal({ ...activeData }, { docked: true, expanded: true })
+      }
       else openFromDetailPage()
     })
     document.body.appendChild(trigger)
@@ -755,10 +1081,11 @@ function refreshTrigger(): void {
 
   const titleSpan = trigger.querySelector('[data-gr-title]')
   if (titleSpan) {
-    const label =
-      activeData?.meta.title ??
-      findJobDetailsContainer()?.querySelector('h1')?.textContent ??
-      ''
+    let label = activeData?.meta.title
+    if (isInvalidJobTitle(label)) {
+      const h1Text = findJobDetailsContainer()?.querySelector('h1')?.textContent?.trim()
+      label = !isInvalidJobTitle(h1Text) ? h1Text : ''
+    }
     titleSpan.textContent = label ? truncate(label) : ''
   }
 }
@@ -784,17 +1111,50 @@ function installCardClickTracker(): void {
       if (!target || typeof target.closest !== 'function') return
       if (!extensionContextValid()) return
 
-      const card = target.closest(
-        SELECTORS.jobCard.join(', ')
-      ) as HTMLElement | null
+      const card =
+        (target.closest(SELECTORS.jobCard.join(', ')) as HTMLElement | null) ??
+        findJobCardForLink(target)
       if (!card) return
 
+      if (getDistinctJobIds(card).size !== 1) return
+
       const parsed = parseCardProfile(card)
-      if (!parsed) return
+      if (!parsed || isInvalidJobTitle(parsed.meta.title)) return
 
       rememberCardParse(parsed)
       lastCardClick = { parsed, at: Date.now() }
       setActive(buildEnrichment(parsed))
+    },
+    true
+  )
+}
+
+function installKeyboardShortcut(): void {
+  document.addEventListener(
+    'keydown',
+    (event) => {
+      const key = event.key.toLowerCase()
+      const isMac = /mac/i.test(navigator.platform)
+      const matches = isMac
+        ? event.metaKey && event.shiftKey && key === 'g' && !event.altKey
+        : event.altKey && key === 'g' && !event.ctrlKey && !event.metaKey
+      if (!matches) return
+
+      event.preventDefault()
+      event.stopPropagation()
+      if (isDetailModalOpen()) {
+        closeDetailModal()
+        return
+      }
+
+      if (activeData) {
+        openDetailModal({ ...activeData }, { docked: true, expanded: true })
+        return
+      }
+
+      const drawer = findOpenDrawer()
+      if (drawer) handleNativeDrawer(drawer, true)
+      else if (isJobDetailPage()) openFromDetailPage()
     },
     true
   )
@@ -829,11 +1189,22 @@ function onUrlChange(): void {
   if (/\/jobs\/~/.test(window.location.pathname)) {
     void handleDetailRoute()
   }
+  if (isProposalPage()) {
+    scanProposalPage()
+  }
 }
 
 function runScan(): void {
   if (!extensionContextValid()) {
     observer.disconnect()
+    return
+  }
+  if (isProposalPage()) {
+    try {
+      scanProposalPage()
+    } catch {
+      window.setTimeout(scanProposalPage, 1000)
+    }
     return
   }
   try {
@@ -860,6 +1231,7 @@ const observer = new MutationObserver(scheduledScan)
 function start(): void {
   patchHistory()
   installCardClickTracker()
+  installKeyboardShortcut()
   observer.observe(document.body, { childList: true, subtree: true })
   runScan()
   onUrlChange()

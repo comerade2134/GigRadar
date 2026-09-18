@@ -8,7 +8,7 @@ Paste-ready answers for the Chrome Web Store "Permissions" tab. Reviewers reject
 
 ## `storage`
 
-> Stores user settings (AI polish, RSS scanner), the purchased-license cache, a 7-day auto-expiring cache of job intel used to pre-fill proposal pages, and the local "Connects Protected" counter. All data stays in local extension storage on the user's device; nothing syncs or transmits.
+> Stores user settings (AI polish, RSS scanner), the purchased-license cache, a 7-day auto-expiring cache of job intel used to pre-fill proposal pages, and the local "Connects Protected" counter in extension storage. The vendored ExtensionPay library may additionally use extension sync/local storage for its license identifier and purchase-related user record so ExtensionPay can verify a license. No page data is synced by GigRadar.
 
 ## `alarms`
 
@@ -17,6 +17,10 @@ Paste-ready answers for the Chrome Web Store "Permissions" tab. Reviewers reject
 ## `notifications`
 
 > Used exclusively by the optional Real-Time Job Scanner to show a notification when a new job matching the user's saved-search criteria appears in their RSS feed. Clicking a notification opens the job posting. Off by default.
+
+## Host permission — `https://extensionpay.com/*`
+
+> Required by ExtensionPay to open checkout and verify a purchased GigRadar Pro license. GigRadar receives only paid/unpaid status; it does not read or store payment details.
 
 ## Content script — `*://*.upwork.com/*` (main)
 
@@ -34,6 +38,11 @@ Paste-ready answers for the Chrome Web Store "Permissions" tab. Reviewers reject
 
 > Requested only when the user enables the Real-Time Job Scanner, so the background worker can fetch the RSS feed of the user's own saved Upwork search (with their existing session cookies). Declining keeps the scanner off; all on-page features work without it.
 
+## Optional host permissions — `hooks.slack.com`, `discord.com`, `https://*/*`
+
+> Requested only when the user or agency admin configures "Agency Lead Inbox & Webhooks / CRM Sync" and provides their Slack, Discord, or custom CRM webhook URL (e.g. Zapier, Make, HubSpot). Webhook event payloads (deal value, claim status, collision alerts) are posted directly to the user-specified endpoint. Declining the permission keeps webhooks disabled; all on-page inspection and proposal features work without it.
+
 ## Remote code statement
 
 > No remote code. All JavaScript is bundled at build time. The only third-party library (ExtPay) is vendored into the package because MV3 CSP prohibits loading it remotely.
+

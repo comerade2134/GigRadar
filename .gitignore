@@ -6,6 +6,7 @@ node_modules/
 dist/
 dist-zip/
 *.zip
+!landing/*.zip
 *.tar.gz
 
 # Environment & local credentials
@@ -24,6 +25,8 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+.agents/
+skills-lock.json
 
 # Logs & cache
 npm-debug.log*

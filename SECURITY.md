@@ -2,10 +2,10 @@
 
 ## Our Guarantees
 
-GigRadar is engineered strictly as a client-side inspection tool with a zero-telemetry architecture:
+GigRadar is engineered as a client-side inspection tool with no GigRadar backend, analytics, or telemetry:
 
-1. **Zero Remote Servers**: GigRadar runs 100% locally in your browser. We operate no analytics servers, tracking databases, or telemetry collectors.
-2. **Minimal Permissions Scope**: The extension's host permissions are strictly bounded to `*://*.upwork.com/*` and `https://extensionpay.com/*` for license verification.
+1. **No GigRadar Data Backend**: GigRadar runs its analysis locally in your browser. We operate no analytics servers, tracking databases, or telemetry collectors. Optional requests go directly to ExtensionPay, Upwork, OpenAI, or Anthropic as described in the privacy policy.
+2. **Minimal Permissions Scope**: The extension's host permissions are bounded to `*://*.upwork.com/*` and `https://extensionpay.com/*`; optional AI and RSS hosts are requested only when their features are enabled.
 3. **Local BYOK AI Storage**: If you enable optional AI polish with your OpenAI or Anthropic API key, your key is stored locally in `chrome.storage.local` on your browser profile and communicated directly to the respective API provider over HTTPS.
 
 ## Reporting a Vulnerability

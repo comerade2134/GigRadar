@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GigRadar — The Tactical Operating System for Upwork</title>
+  <meta name="description" content="Stop wasting Connects on ghost jobs. Real-time client intent scores, proposal autopilot, predictive bid intelligence, and agency team sync.">
+  <link rel="icon" type="image/png" href="./icons/icon32.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            obsidian: '#080A0D',
+            panel: '#0E1217',
+            raised: '#151B22',
+            edge: '#212B36',
+            brand: {
+              400: '#34D399',
+              500: '#10B981',
+              600: '#059669'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.05); }
+    }
+    .glow-bg {
+      animation: pulseGlow 8s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="bg-obsidian text-slate-100 font-sans antialiased selection:bg-brand-500/30 selection:text-white">
+
+  <!-- Ambient Glow -->
+  <div class="pointer-events-none fixed -top-40 left-1/2 -translate-x-1/2 h-[550px] w-[1000px] rounded-full bg-brand-500/[0.08] blur-[140px] glow-bg"></div>
+  <div class="pointer-events-none fixed top-[40%] right-[-10%] h-[450px] w-[600px] rounded-full bg-indigo-500/[0.06] blur-[150px]"></div>
+
+  <!-- Navigation -->
+  <nav class="sticky top-0 z-50 border-b border-edge/80 bg-obsidian/80 backdrop-blur-xl">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 p-0.5 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+          <div class="h-full w-full bg-obsidian rounded-[10px] flex items-center justify-center">
+            <svg class="w-5 h-5 text-brand-400" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+          </div>
+        </div>
+        <span class="font-extrabold text-lg tracking-tight text-white">GigRadar</span>
+        <span class="rounded-full border border-brand-500/30 bg-brand-500/10 px-2.5 py-0.5 text-[10px] font-bold text-brand-400">
+          v0.3.2 Live
+        </span>
+      </div>
+
+      <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+        <a href="#features" class="hover:text-white transition-colors">Features</a>
+        <a href="#calculator" class="hover:text-white transition-colors">ROI Calculator</a>
+        <a href="#agency" class="hover:text-white transition-colors">Agency Suite</a>
+        <a href="#pricing" class="hover:text-white transition-colors">Pricing</a>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="./gigradar-0.3.2.zip" download class="rounded-xl bg-gradient-to-r from-brand-400 to-brand-500 px-4 py-2 text-xs font-black text-slate-950 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all hover:scale-[1.02] active:scale-[.98]">
+          ⬇️ Download Extension
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="relative pt-24 pb-20 px-6 text-center max-w-5xl mx-auto">
+    <div class="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-3.5 py-1 text-xs font-semibold text-brand-300 mb-8">
+      <span class="flex h-2 w-2 rounded-full bg-brand-400 animate-ping"></span>
+      Stop Wasting Upwork Connects on Fake & Ghost Jobs
+    </div>
+
+    <h1 class="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white leading-[1.08] mb-6">
+      The Tactical Operating System for <span class="bg-gradient-to-r from-brand-300 via-teal-300 to-indigo-400 bg-clip-text text-transparent">Upwork Freelancers & Agencies</span>
+    </h1>
+
+    <p class="text-lg sm:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed mb-10">
+      Reveals verified client intent scores, scrubs AI proposal fluff with customized case study receipts, models the 4-slot boost auction, and stops agency team bidding collisions.
+    </p>
+
+    <div class="flex flex-wrap items-center justify-center gap-4 mb-16">
+      <a href="./gigradar-0.3.2.zip" download class="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-brand-400 via-emerald-400 to-teal-400 px-8 py-4 text-base font-black text-slate-950 shadow-[0_0_35px_rgba(16,185,129,0.35)] hover:shadow-[0_0_50px_rgba(16,185,129,0.6)] transition-all hover:scale-[1.02] active:scale-[.98]">
+        <span>⬇️ Download Free v0.3.2 (.zip)</span>
+      </a>
+      <a href="#install" class="rounded-2xl border border-edge bg-raised/80 px-6 py-4 text-sm font-bold text-slate-200 hover:border-brand-500/40 hover:text-white transition-all">
+        📖 2-Min Install Guide
+      </a>
+    </div>
+
+    <!-- Proof Badges -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
+      <div class="rounded-2xl border border-edge bg-panel/80 p-4">
+        <div class="text-2xl font-black text-brand-400">148+</div>
+        <div class="text-xs text-slate-400 mt-1">Connects Saved / Mo</div>
+      </div>
+      <div class="rounded-2xl border border-edge bg-panel/80 p-4">
+        <div class="text-2xl font-black text-indigo-400">74%</div>
+        <div class="text-xs text-slate-400 mt-1">Higher Client Reply Rate</div>
+      </div>
+      <div class="rounded-2xl border border-edge bg-panel/80 p-4">
+        <div class="text-2xl font-black text-sky-400">4 Slots</div>
+        <div class="text-xs text-slate-400 mt-1">Boost Auction Modeled</div>
+      </div>
+      <div class="rounded-2xl border border-edge bg-panel/80 p-4">
+        <div class="text-2xl font-black text-teal-400">0 Collisions</div>
+        <div class="text-xs text-slate-400 mt-1">Agency Claim Locks</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Interactive Connects Burn Calculator -->
+  <section id="calculator" class="py-20 px-6 bg-panel/40 border-y border-edge/60 relative">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-brand-400 mb-2">Connects Burn Calculator</h2>
+        <h3 class="text-3xl sm:text-4xl font-black text-white">How much capital are you burning on ghost jobs?</h3>
+        <p class="text-sm text-slate-400 mt-2">Freelancers lose up to 45% of their Connects to clients with sub-20% hire rates.</p>
+      </div>
+
+      <div class="rounded-3xl border border-edge bg-raised/70 p-8 shadow-2xl backdrop-blur-xl">
+        <div class="grid sm:grid-cols-2 gap-8 mb-8">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-2">Proposals Sent Per Month: <span id="calc-proposals-val" class="text-brand-400">40</span></label>
+            <input id="calc-proposals" type="range" min="10" max="150" value="40" class="w-full accent-brand-500 cursor-pointer">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-2">Average Connects Per Bid: <span id="calc-connects-val" class="text-brand-400">14</span></label>
+            <input id="calc-connects" type="range" min="6" max="30" value="14" class="w-full accent-brand-500 cursor-pointer">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-edge">
+          <div class="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-center">
+            <div class="text-[11px] font-bold text-rose-300 uppercase">Wasted Connects / Mo</div>
+            <div id="res-wasted-connects" class="text-3xl font-black text-rose-400 mt-1">224</div>
+          </div>
+          <div class="rounded-xl border border-brand-500/20 bg-brand-500/10 p-4 text-center">
+            <div class="text-[11px] font-bold text-brand-300 uppercase">Cash Burn Protected</div>
+            <div id="res-cash-saved" class="text-3xl font-black text-brand-400 mt-1">$33.60</div>
+          </div>
+          <div class="rounded-xl border border-indigo-500/20 bg-indigo-500/10 p-4 text-center">
+            <div class="text-[11px] font-bold text-indigo-300 uppercase">Extra Closed Value</div>
+            <div id="res-revenue-gained" class="text-3xl font-black text-indigo-400 mt-1">+$1,450</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 Core Pillars -->
+  <section id="features" class="py-24 px-6 max-w-7xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-xs font-bold uppercase tracking-widest text-brand-400 mb-2">Complete System Overview</h2>
+      <h3 class="text-3xl sm:text-5xl font-black text-white">4 Pillars of Modern Upwork Dominance</h3>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8">
+      <!-- Pillar 1 -->
+      <div class="rounded-3xl border border-edge bg-panel/90 p-8 hover:border-brand-500/40 transition-all group">
+        <div class="h-12 w-12 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400 text-xl font-black mb-6">
+          01
+        </div>
+        <h4 class="text-xl font-black text-white mb-3">Client Intent Scoring & Ghost Job Radar</h4>
+        <p class="text-sm text-slate-400 leading-relaxed mb-6">
+          Real-time 0–100 tactical score stamped beneath every job listing on Upwork. Instantly reveals true median pay rates, lifetime spend, and red flags (Telegram scams, 0% hire rate ghost jobs).
+        </p>
+        <ul class="space-y-2.5 text-xs text-slate-300">
+          <li class="flex items-center gap-2">✓ High / Medium / Low Tactical Intent Badges</li>
+          <li class="flex items-center gap-2">✓ True Rate Benchmark vs. Inflated Budgets</li>
+          <li class="flex items-center gap-2">✓ Real Client Name Extraction from Feedback History</li>
+        </ul>
+      </div>
+
+      <!-- Pillar 2 -->
+      <div class="rounded-3xl border border-edge bg-panel/90 p-8 hover:border-indigo-500/40 transition-all group">
+        <div class="h-12 w-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-xl font-black mb-6">
+          02
+        </div>
+        <h4 class="text-xl font-black text-white mb-3">High-Precision Proposal Autopilot</h4>
+        <p class="text-sm text-slate-400 leading-relaxed mb-6">
+          Automatically matches your portfolio case studies and verifiable receipts to live job requirements. Generates custom 4-part winning proposals with zero AI clichés or fluff.
+        </p>
+        <ul class="space-y-2.5 text-xs text-slate-300">
+          <li class="flex items-center gap-2">✓ Automated Portfolio Matching Algorithm</li>
+          <li class="flex items-center gap-2">✓ Zero-AI-Fluff Filter (Banned phrase scrubber)</li>
+          <li class="flex items-center gap-2">✓ 1-Click Autofill into Upwork's Cover Letter Textarea</li>
+        </ul>
+      </div>
+
+      <!-- Pillar 3 -->
+      <div class="rounded-3xl border border-edge bg-panel/90 p-8 hover:border-sky-500/40 transition-all group">
+        <div class="h-12 w-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 text-xl font-black mb-6">
+          03
+        </div>
+        <h4 class="text-xl font-black text-white mb-3">Predictive Bid Intelligence & ROI Forecaster</h4>
+        <p class="text-sm text-slate-400 leading-relaxed mb-6">
+          A real-time auction engine modeling Upwork's 4 boosted slots against client hire rate and proposal saturation. Calculates exact win probability curves and expected net dollar value ($EV).
+        </p>
+        <ul class="space-y-2.5 text-xs text-slate-300">
+          <li class="flex items-center gap-2">✓ 4 Strategies: Organic Sweet Spot, Tactical Boost, Aggressive, Skip</li>
+          <li class="flex items-center gap-2">✓ 1-Click Native Boost Input Injection</li>
+          <li class="flex items-center gap-2">✓ Interactive Options Sandbox Simulator</li>
+        </ul>
+      </div>
+
+      <!-- Pillar 4 -->
+      <div class="rounded-3xl border border-edge bg-panel/90 p-8 hover:border-teal-500/40 transition-all group">
+        <div class="h-12 w-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 text-xl font-black mb-6">
+          04
+        </div>
+        <h4 class="text-xl font-black text-white mb-3">Agency Lead Inbox & Real-Time Webhooks</h4>
+        <p class="text-sm text-slate-400 leading-relaxed mb-6">
+          Team collision lock prevents multiple agency business developers from bidding on the same client. Dispatches instant webhook alerts to Slack, Discord, or your custom CRM.
+        </p>
+        <ul class="space-y-2.5 text-xs text-slate-300">
+          <li class="flex items-center gap-2">✓ Real-Time Collision Warning Banners on Job Posts</li>
+          <li class="flex items-center gap-2">✓ Slack Block Kit & Discord Rich Embed Dispatching</li>
+          <li class="flex items-center gap-2">✓ 1-Click CSV & JSON Export for CRM Pipelines</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Table -->
+  <section id="pricing" class="py-20 px-6 bg-panel/30 border-t border-edge/60">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-brand-400 mb-2">Transparent Tiers</h2>
+        <h3 class="text-3xl sm:text-5xl font-black text-white">Built for Solo Pros and Scaling Agencies</h3>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8 items-stretch">
+        <!-- Free Tier -->
+        <div class="rounded-3xl border border-edge bg-raised/50 p-8 flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Starter</div>
+            <div class="text-3xl font-black text-white mb-4">Free Forever</div>
+            <p class="text-xs text-slate-400 mb-6">Essential client verification and scam protection.</p>
+            <ul class="space-y-3 text-xs text-slate-300">
+              <li>✓ 0–100 Real-Time Client Intent Scores</li>
+              <li>✓ Ghost Job & Off-Platform Scam Radar</li>
+              <li>✓ Connects Saved Counter</li>
+              <li>✓ True Rate Benchmark</li>
+              <li>✓ 8 Interface Languages</li>
+            </ul>
+          </div>
+          <a href="./gigradar-0.3.2.zip" download class="mt-8 block w-full text-center rounded-xl border border-edge bg-obsidian py-3 text-xs font-bold text-white hover:border-brand-500/40 transition-all">
+            Download Free Extension
+          </a>
+        </div>
+
+        <!-- Pro Tier -->
+        <div class="rounded-3xl border-2 border-brand-500/60 bg-gradient-to-b from-brand-500/10 to-transparent p-8 flex flex-col justify-between relative shadow-[0_0_40px_rgba(16,185,129,0.15)]">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-brand-400 to-brand-500 px-3.5 py-0.5 text-[10px] font-black text-slate-950 uppercase tracking-widest">
+            Most Popular
+          </div>
+          <div>
+            <div class="text-xs font-bold uppercase tracking-wider text-brand-300 mb-1">Pro Freelancer</div>
+            <div class="flex items-baseline gap-2 mb-4">
+              <span class="text-4xl font-black text-white">$29</span>
+              <span class="text-xs text-slate-400">/ month (or $19.99 Early Bird)</span>
+            </div>
+            <p class="text-xs text-slate-400 mb-6">For serious freelancers closing $5k–$20k/mo.</p>
+            <ul class="space-y-3 text-xs text-slate-200">
+              <li>✓ Everything in Free</li>
+              <li>✓ <b>Proposal Autopilot & Custom Voice Profiles</b></li>
+              <li>✓ <b>Portfolio Case Study Matcher</b></li>
+              <li>✓ <b>Predictive Bid Intelligence & ROI Curve</b></li>
+              <li>✓ <b>1-Click Upwork Cover Letter & Boost Autofill</b></li>
+              <li>✓ <b>Real Client Name Extraction</b></li>
+            </ul>
+          </div>
+          <a href="./gigradar-0.3.2.zip" download class="mt-8 block w-full text-center rounded-xl bg-gradient-to-r from-brand-400 to-brand-500 py-3 text-xs font-black text-slate-950 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:scale-[1.02] transition-all">
+            Install Pro v0.3.2
+          </a>
+        </div>
+
+        <!-- Agency Tier -->
+        <div class="rounded-3xl border border-indigo-500/30 bg-indigo-500/5 p-8 flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-bold uppercase tracking-wider text-indigo-300 mb-1">Agency Scale</div>
+            <div class="flex items-baseline gap-2 mb-4">
+              <span class="text-4xl font-black text-white">$199</span>
+              <span class="text-xs text-slate-400">/ month</span>
+            </div>
+            <p class="text-xs text-slate-400 mb-6">For multi-seat agencies spending $1,000s on Connects.</p>
+            <ul class="space-y-3 text-xs text-slate-300">
+              <li>✓ Everything in Pro Freelancer</li>
+              <li>✓ <b>Team Collision Prevention Locks</b></li>
+            <p class="text-xs text-slate-400 mb-6">For agencies and BD teams that bid aggressively and cannot afford collisions.</p>
+
+            <ul class="space-y-3 text-xs text-slate-300">
+              <li class="flex items-center gap-2">✓ Everything in Pro (Up to 10 Seats)</li>
+              <li class="flex items-center gap-2">✓ Real-time Team Claim & Collision Blocking</li>
+              <li class="flex items-center gap-2">✓ Agency Lead Inbox & Pipeline Dashboard</li>
+              <li class="flex items-center gap-2">✓ Real-Time Webhooks (Slack Block Kit & Discord)</li>
+              <li class="flex items-center gap-2">✓ 1-Click CSV / CRM Deal Pipeline Export</li>
+            </ul>
+          </div>
+
+          <a href="./gigradar-0.3.2.zip" download class="mt-8 block w-full text-center rounded-xl border border-indigo-500/40 bg-indigo-500/20 py-3 text-xs font-bold text-indigo-300 hover:bg-indigo-500/30 transition-all">
+            Deploy for Agency
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How to Install (Chrome Web Store & Developer Mode) -->
+  <section id="install" class="py-20 px-6 max-w-5xl mx-auto">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-black text-white">How to Install in 2 Minutes</h2>
+      <p class="text-slate-400 text-sm mt-2">Load GigRadar in Google Chrome or Brave in 3 simple steps.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="rounded-2xl border border-edge bg-panel p-6 shadow-card">
+        <div class="text-brand-400 font-mono font-black text-2xl mb-2">01</div>
+        <h3 class="text-base font-bold text-white mb-2">Download & Unzip</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Download <a href="./gigradar-0.3.2.zip" class="text-brand-400 underline">gigradar-0.3.2.zip</a> and extract the folder to your computer.
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-edge bg-panel/90 p-6">
+        <div class="text-brand-400 font-mono text-xs font-bold mb-2">STEP 02</div>
+        <h4 class="font-bold text-white mb-1">Enable Dev Mode</h4>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Open Chrome/Brave/Edge and navigate to <code class="text-[11px] bg-obsidian px-1.5 py-0.5 rounded text-slate-300">chrome://extensions</code>. Toggle <b>Developer mode</b> ON.
+        </p>
+      </div>
+
+      <div class="rounded-2xl border border-edge bg-panel/90 p-6">
+        <div class="text-brand-400 font-mono text-xs font-bold mb-2">STEP 03</div>
+        <h4 class="font-bold text-white mb-1">Load Unpacked</h4>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Click <b>Load unpacked</b> and select the extracted folder. GigRadar is active immediately!
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-edge/60 py-10 px-6 text-center text-xs text-slate-500">
+    <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-300">GigRadar v0.3.2</span>
+        <span>• Deterministic Client-Side Intelligence</span>
+      </div>
+      <div>
+        Disclaimer: GigRadar is an independent tool and is not affiliated with, endorsed by, or sponsored by Upwork Global Inc.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Live Calculator Logic
+    const propSlider = document.getElementById('calc-proposals')
+    const connSlider = document.getElementById('calc-connects')
+    const propVal = document.getElementById('calc-proposals-val')
+    const connVal = document.getElementById('calc-connects-val')
+    const resWasted = document.getElementById('res-wasted-connects')
+    const resCash = document.getElementById('res-cash-saved')
+    const resRev = document.getElementById('res-revenue-gained')
+
+    function updateCalc() {
+      const p = Number(propSlider.value)
+      const c = Number(connSlider.value)
+      propVal.textContent = p
+      connVal.textContent = c
+
+      // 40% of bids historically go to ghost jobs with low hire rates
+      const wastedConnects = Math.round(p * c * 0.40)
+      const cashSaved = (wastedConnects * 0.15).toFixed(2)
+      // Redirected connects produce 1 additional win per ~100 connects on $1500 contracts
+      const extraDeals = Math.max(1, Math.round(wastedConnects / 120))
+      const extraRev = extraDeals * 1450
+
+      resWasted.textContent = wastedConnects
+      resCash.textContent = `$${cashSaved}`
+      resRev.textContent = `+$${extraRev.toLocaleString()}`
+    }
+
+    propSlider.addEventListener('input', updateCalc)
+    connSlider.addEventListener('input', updateCalc)
+    updateCalc()
+  </script>
+</body>
+</html>

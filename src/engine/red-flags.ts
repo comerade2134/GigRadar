@@ -9,12 +9,12 @@ const PATTERNS: readonly ScamPattern[] = [
   {
     category: 'telegram',
     regex:
-      /\b(?:t\.me\/[A-Za-z0-9_]{3,}|telegram(?:\.me)?\/[A-Za-z0-9_]{3,}|\btg\s*[:\-]\s*@\w[\w.]{2,}|(?:contact|message|reach|ping|dm)(?:\s+me)?\s+(?:on|via|at|through)\s+telegram)\b/i
+      /\b(?:t\.me\/[A-Za-z0-9_]{3,}|telegram(?:\.me)?\/[A-Za-z0-9_]{3,}|\btg\s*[:\-]\s*@\w[\w.]{2,}|(?:contact|message|reach|ping|dm)(?:\s+(?:me|us|out))?\s+(?:on|via|at|through)\s+telegram)\b/i
   },
   {
     category: 'whatsapp',
     regex:
-      /\b(?:wa\.me\/\d{6,}|whatsapp(?:\s+(?:me|us|at|on))?\s*(?:[:\-]|\+?\d{7,})|(?:contact|message|reach|ping)(?:\s+me)?\s+(?:on|via|at|through)\s+whatsapp)\b/i
+      /\b(?:wa\.me\/\d{6,}|whatsapp(?:\s+(?:me|us|at|on))?\s*(?:[:\-]|\+?\d{7,})|(?:contact|message|reach|ping)(?:\s+(?:me|us|out))?\s+(?:on|via|at|through)\s+whatsapp)\b/i
   },
   {
     category: 'off-platform-email',
@@ -44,6 +44,27 @@ function snippetAround(text: string, index: number): string {
   return raw.length > 120 ? `${raw.slice(0, 119)}…` : raw
 }
 
+function isNegatedContext(text: string, matchIndex: number): boolean {
+  const windowStart = Math.max(0, matchIndex - 50)
+  const prefix = text.slice(windowStart, matchIndex)
+  const lastBreak = Math.max(
+    prefix.lastIndexOf('.'),
+    prefix.lastIndexOf('\n'),
+    prefix.lastIndexOf('!'),
+    prefix.lastIndexOf('?')
+  )
+  const clause = lastBreak >= 0 ? prefix.slice(lastBreak + 1) : prefix
+  return /\b(?:never|not|don't|do\s+not|won't|will\s+not|refuse|avoid|against|prohibit\w*|strictly\s+no|beware\s+of|scam\w*|report)\b/i.test(
+    clause
+  )
+}
+
+function isFeelFreeInvitation(text: string, matchIndex: number): boolean {
+  const windowStart = Math.max(0, matchIndex - 30)
+  const prefix = text.slice(windowStart, matchIndex)
+  return /\bfeel\s+free(?:\s+to)?\b/i.test(prefix)
+}
+
 export function scanScamSignals(text: string | null | undefined): ScamScanResult {
   if (!text || text.length < 8) return { matched: false, matches: [] }
 
@@ -51,6 +72,18 @@ export function scanScamSignals(text: string | null | undefined): ScamScanResult
   for (const pattern of PATTERNS) {
     const found = pattern.regex.exec(text)
     if (found) {
+      if (
+        pattern.category === 'off-platform-steer' &&
+        isNegatedContext(text, found.index)
+      ) {
+        continue
+      }
+      if (
+        pattern.category === 'free-work-request' &&
+        (isFeelFreeInvitation(text, found.index) || isNegatedContext(text, found.index))
+      ) {
+        continue
+      }
       matches.push({ category: pattern.category, snippet: snippetAround(text, found.index) })
     }
   }

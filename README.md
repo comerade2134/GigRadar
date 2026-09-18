@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/gigradar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm"><img src="https://img.shields.io/badge/Chrome_Web_Store-Live-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
-  <a href="https://github.com/comerade2134/GigRadar/releases"><img src="https://img.shields.io/badge/Release-v0.2.0-10B981?style=for-the-badge&logo=github&logoColor=white" alt="Release v0.2.0"></a>
+  <a href="https://github.com/comerade2134/GigRadar/releases"><img src="https://img.shields.io/badge/Release-v0.3.2-10B981?style=for-the-badge&logo=github&logoColor=white" alt="Release v0.3.2"></a>
   <a href="https://developer.chrome.com/docs/extensions/mv3/intro/"><img src="https://img.shields.io/badge/Manifest-V3-10B981?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Manifest V3"></a>
   <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
   <a href="https://vitejs.dev/"><img src="https://img.shields.io/badge/Vite-5.4-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"></a>
@@ -18,6 +18,7 @@
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/gigradar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm"><strong>Install on Chrome Web Store</strong></a> •
   <a href="https://gigradar-3tj.pages.dev/"><strong>Live Website</strong></a> •
+  <a href="#-quick-install-beta"><strong>Quick Install (Beta)</strong></a> •
   <a href="#-features"><strong>Features</strong></a> •
   <a href="#-the-problem--gigradar-solution"><strong>Comparison</strong></a> •
   <a href="#-architecture"><strong>Architecture</strong></a> •
@@ -156,7 +157,7 @@ src/
 ## 🔒 Design & Privacy Guarantees
 
 - **Zero Background Fetching**: GigRadar only parses DOM nodes you actively view in your browser. No mass automated requests on Upwork's servers.
-- **Strict Host Scope**: Content scripts match `*://*.upwork.com/*` exclusively; no other hosts are accessed unless BYOK AI is explicitly enabled.
+- **Strict Host Scope**: Content scripts match Upwork and ExtensionPay only; no other hosts are accessed unless BYOK AI or the optional RSS scanner is explicitly enabled.
 - **Shadow DOM Style Isolation**: All injected badges, pills, and drawers live in closed Shadow Roots. Upwork's CSS cannot break GigRadar, and GigRadar styles never leak into Upwork.
 - **Zero Remote Analytics**: No tracking pixels, no telemetry databases, and no external user tracking.
 
