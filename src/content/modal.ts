@@ -21,7 +21,13 @@ import { loadVoiceProfile, DEFAULT_VOICE_PROFILE } from '../autopilot/voice-prof
 import { matchCaseStudiesForJob } from '../autopilot/case-studies'
 import { calculateBidIntelligence, estimateDealValue } from '../engine/bid-intelligence'
 import { dispatchWebhooks } from '../engine/webhooks'
-import type { AutopilotProposal, VoiceTone } from '../types'
+import {
+  loadClientRecords,
+  saveClientRecord,
+  deleteClientRecord,
+  matchClientAgainstRecords
+} from '../engine/client-notes'
+import type { AutopilotProposal, VoiceTone, ClientRecord, ClientRecordStatus } from '../types'
 
 let activeModalLocale: SupportedLocale = 'en'
 void getLanguage().then((l) => {
@@ -89,6 +95,78 @@ const MODAL_STYLES = `
     margin-left: auto; flex: none;
     display: flex; align-items: center; gap: 6px;
   }
+  .client-note-btn {
+    width: 30px; height: 30px;
+    border-radius: 9px; border: 1px solid #1E2530;
+    background: #121620; cursor: pointer;
+    font-size: 13px; line-height: 1; color: #94A3B8;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .client-note-btn:hover { background: #1A202C; color: #F59E0B; border-color: #2E3846; transform: scale(1.05); }
+  .client-note-btn.active { color: #F59E0B; border-color: rgba(245, 158, 11, 0.4); }
+  .client-record-banner {
+    margin-bottom: 12px; padding: 10px 14px; border-radius: 10px; font-size: 11.5px; line-height: 1.4;
+  }
+  .banner-blacklisted {
+    background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.45); color: #FCA5A5;
+  }
+  .banner-favorite {
+    background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.45); color: #FCD34D;
+  }
+  .cr-head {
+    display: flex; align-items: center; justify-content: space-between;
+    font-weight: 800; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 4px;
+  }
+  .cr-edit-btn {
+    background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 5px; color: inherit; font-size: 10px; font-weight: 700; padding: 2px 7px; cursor: pointer;
+  }
+  .cr-edit-btn:hover { background: rgba(255, 255, 255, 0.16); }
+  .cr-desc { font-size: 11.5px; color: #E2E8F0; }
+  .cr-popover {
+    margin-bottom: 14px; padding: 14px; border-radius: 10px;
+    background: #0E131C; border: 1px solid #232D3F; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+  .cr-popover-title {
+    font-size: 12px; font-weight: 800; color: #F3F4F6; margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .cr-status-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .cr-status-btn {
+    flex: 1; padding: 6px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 700; cursor: pointer;
+    background: #141A24; border: 1px solid #232D3F; color: #94A3B8;
+  }
+  .cr-status-btn.selected-blacklisted {
+    background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.5); color: #EF4444;
+  }
+  .cr-status-btn.selected-favorite {
+    background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.5); color: #F59E0B;
+  }
+  .cr-status-btn.selected-none {
+    background: #1E2530; border-color: #38BDF8; color: #38BDF8;
+  }
+  .cr-input {
+    width: 100%; box-sizing: border-box; background: #07090D; border: 1px solid #232D3F; border-radius: 6px;
+    padding: 6px 9px; font-size: 11.5px; color: #F3F4F6; font-family: inherit; margin-bottom: 8px;
+  }
+  .cr-input:focus { outline: none; border-color: #34D399; }
+  .cr-textarea {
+    width: 100%; box-sizing: border-box; height: 56px; resize: vertical;
+    background: #07090D; border: 1px solid #232D3F; border-radius: 6px;
+    padding: 6px 9px; font-size: 11.5px; color: #F3F4F6; font-family: inherit; margin-bottom: 10px;
+  }
+  .cr-textarea:focus { outline: none; border-color: #34D399; }
+  .cr-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .cr-save-btn {
+    background: linear-gradient(180deg, #34D399, #059669); border: none; border-radius: 6px;
+    padding: 6px 14px; color: #07090C; font-size: 11px; font-weight: 800; cursor: pointer;
+  }
+  .cr-del-btn {
+    background: transparent; border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 6px;
+    padding: 6px 12px; color: #F87171; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+  .cr-del-btn:hover { background: rgba(239, 68, 68, 0.1); }
   .settings-btn {
     width: 30px; height: 30px;
     border-radius: 9px; border: 1px solid #1E2530;
@@ -1610,6 +1688,151 @@ function wireTeamCollision(
   void renderBanner()
 }
 
+function wireClientNotes(
+  scope: HTMLElement,
+  headScope: HTMLElement,
+  data: EnrichmentData,
+  _locale: SupportedLocale,
+  onUpdate: () => void
+): void {
+  const container = scope.querySelector<HTMLElement>('#gr-client-record-container')
+  const noteBtn = headScope.querySelector<HTMLButtonElement>('#gr-client-note-btn')
+  if (!container || !noteBtn) return
+
+  let currentRecord: ClientRecord | null = null
+  let isEditing = false
+
+  const renderBanner = async () => {
+    const records = await loadClientRecords()
+    currentRecord = matchClientAgainstRecords(records, {
+      clientName: data.nameGuess?.name,
+      companyName: data.dossier?.company?.name,
+      feedbacks: data.meta.feedbacks
+    })
+
+    if (currentRecord) {
+      noteBtn.classList.add('active')
+      const isBlack = currentRecord.status === 'blacklisted'
+      container.innerHTML = `
+        <div class="client-record-banner ${isBlack ? 'banner-blacklisted' : 'banner-favorite'}">
+          <div class="cr-head">
+            <span>${isBlack ? '⛔ BLACKLISTED CLIENT' : '⭐ FAVORITE CLIENT'}</span>
+            <button type="button" class="cr-edit-btn" id="gr-cr-edit-btn">Edit Note</button>
+          </div>
+          <div class="cr-desc">${currentRecord.note ? escapeHtml(currentRecord.note) : isBlack ? 'Client is on your blacklist.' : 'Saved to your favorites.'}</div>
+        </div>
+        <div id="gr-cr-popover-box" style="display:none;"></div>`
+      container.querySelector('#gr-cr-edit-btn')?.addEventListener('click', () => {
+        showEditor()
+      })
+
+      // If blacklisted, override decision in UI
+      if (isBlack) {
+        const decisionBox = scope.querySelector<HTMLElement>('.decision')
+        if (decisionBox) {
+          decisionBox.className = 'decision decision-skip'
+          decisionBox.innerHTML = `
+            <div class="decision-top"><strong style="color:#EF4444;">SKIP</strong><span>Client is on your blacklist</span></div>
+            <div class="decision-reasons"><span>⛔ Blacklisted: ${escapeHtml(currentRecord.note || 'Blocked')}</span></div>
+            <p>You marked this client as blacklisted. Avoid spending Connects on their listings.</p>`
+        }
+      }
+    } else {
+      noteBtn.classList.remove('active')
+      container.innerHTML = `<div id="gr-cr-popover-box" style="display:none;"></div>`
+    }
+  }
+
+  const showEditor = () => {
+    isEditing = true
+    const popBox = container.querySelector<HTMLElement>('#gr-cr-popover-box')
+    if (!popBox) return
+    popBox.style.display = 'block'
+
+    let selectedStatus: ClientRecordStatus = currentRecord?.status || 'blacklisted'
+    const defaultName = currentRecord?.clientName || data.nameGuess?.name || data.dossier?.company?.name || 'Client'
+    const defaultCompany = currentRecord?.companyName || data.dossier?.company?.name || ''
+    const defaultNote = currentRecord?.note || ''
+
+    popBox.innerHTML = `
+      <div class="cr-popover">
+        <div class="cr-popover-title">
+          <span>📝 Client Radar & Notes</span>
+          <button type="button" id="gr-cr-close" style="background:transparent;border:none;color:#94A3B8;cursor:pointer;font-size:14px;">✕</button>
+        </div>
+        <div class="cr-status-tabs">
+          <button type="button" class="cr-status-btn ${selectedStatus === 'blacklisted' ? 'selected-blacklisted' : ''}" data-status="blacklisted">
+            ⛔ Blacklist
+          </button>
+          <button type="button" class="cr-status-btn ${selectedStatus === 'favorite' ? 'selected-favorite' : ''}" data-status="favorite">
+            ⭐ Favorite
+          </button>
+        </div>
+        <input type="text" id="gr-cr-name" class="cr-input" placeholder="Client or Contact Name" value="${escapeHtml(defaultName)}" />
+        <input type="text" id="gr-cr-company" class="cr-input" placeholder="Company Name (optional)" value="${escapeHtml(defaultCompany)}" />
+        <textarea id="gr-cr-note" class="cr-textarea" placeholder="Notes (e.g. Scope creep, disputed payout, great client)...">${escapeHtml(defaultNote)}</textarea>
+        <div class="cr-actions">
+          ${currentRecord ? `<button type="button" id="gr-cr-del" class="cr-del-btn">Remove</button>` : ''}
+          <button type="button" id="gr-cr-save" class="cr-save-btn">Save Note</button>
+        </div>
+      </div>`
+
+    popBox.querySelectorAll<HTMLButtonElement>('.cr-status-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        selectedStatus = btn.dataset.status as ClientRecordStatus
+        popBox.querySelectorAll('.cr-status-btn').forEach((b) => {
+          b.className = 'cr-status-btn'
+        })
+        btn.className = `cr-status-btn selected-${selectedStatus}`
+      })
+    })
+
+    popBox.querySelector('#gr-cr-close')?.addEventListener('click', () => {
+      popBox.style.display = 'none'
+      isEditing = false
+    })
+
+    popBox.querySelector('#gr-cr-del')?.addEventListener('click', async () => {
+      if (currentRecord?.id) {
+        await deleteClientRecord(currentRecord.id)
+        isEditing = false
+        await renderBanner()
+        onUpdate()
+      }
+    })
+
+    popBox.querySelector('#gr-cr-save')?.addEventListener('click', async () => {
+      const name = (popBox.querySelector<HTMLInputElement>('#gr-cr-name')?.value || '').trim()
+      const company = (popBox.querySelector<HTMLInputElement>('#gr-cr-company')?.value || '').trim()
+      const note = (popBox.querySelector<HTMLTextAreaElement>('#gr-cr-note')?.value || '').trim()
+
+      if (!name && !company) return
+      await saveClientRecord({
+        id: currentRecord?.id,
+        clientName: name || company,
+        companyName: company || undefined,
+        status: selectedStatus,
+        note: note || undefined
+      })
+      isEditing = false
+      await renderBanner()
+      onUpdate()
+    })
+  }
+
+  noteBtn.addEventListener('click', () => {
+    if (isEditing) {
+      const popBox = container.querySelector<HTMLElement>('#gr-cr-popover-box')
+      if (popBox) popBox.style.display = 'none'
+      isEditing = false
+    } else {
+      showEditor()
+    }
+  })
+
+  void renderBanner()
+}
+
 function bidIntelligenceSection(data: EnrichmentData, locale: SupportedLocale): string {
   const intel = calculateBidIntelligence({
     budget: data.budget,
@@ -1861,6 +2084,7 @@ export function openDetailModal(
       ${renderCompanyPills(data)}
     </div>
     <div class="head-actions">
+      <button class="client-note-btn" id="gr-client-note-btn" title="Client Notes & Blacklist">📝</button>
       <button class="settings-btn" title="Open Extension Settings" aria-label="Open Extension Settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
@@ -1888,6 +2112,7 @@ export function openDetailModal(
   contentEl.innerHTML = `
     ${guestNote}
     ${pendingScanNote}
+    <div id="gr-client-record-container"></div>
     <div id="gr-team-collision-container"></div>
     ${scanning ? '' : `<div class="decision decision-${decision.action.toLowerCase()}" aria-live="polite">
       <div class="decision-top"><strong>${decision.action}</strong><span>${escapeHtml(decision.summary)}</span></div>
@@ -1998,6 +2223,7 @@ export function openDetailModal(
   wireAutopilotSection(contentEl, data, locale)
   wireDossierActions(contentEl, data)
   wireTeamCollision(contentEl, data, locale)
+  wireClientNotes(contentEl, head, data, locale, () => openDetailModal(data, options))
 
   contentEl.scrollTop = prevScrollTop
 

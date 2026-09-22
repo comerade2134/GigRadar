@@ -7,8 +7,10 @@ import {
   readSeenJobs,
   scoreRssJob,
   formatBudgetLabel,
+  extractRssBudget,
   type ScannerSettings
 } from '../engine/feed-scanner'
+import { dispatchWebhooks } from '../engine/webhooks'
 
 ExtPay(EXTPAY_EXTENSION_ID).startBackground()
 
@@ -96,7 +98,11 @@ async function runFeedScan(): Promise<ScanOutcome> {
   }
 
   for (const item of hits) {
-    const budgetLabel = formatBudgetLabel(`${item.title}\n${item.description}`)
+    const haystack = `${item.title}\n${item.description}`
+    const budgetLabel = formatBudgetLabel(haystack)
+    const itemScore = scoreRssJob(item)
+    const budget = extractRssBudget(haystack)
+
     try {
       const notificationId = await chrome.notifications.create({
         type: 'basic',
@@ -108,7 +114,27 @@ async function runFeedScan(): Promise<ScanOutcome> {
       })
       pendingNotificationUrls.set(notificationId ?? item.jobId, item.url)
     } catch {
-      break
+      // Continue to next item or webhook
+    }
+
+    if (settings.webhookAlerts && itemScore >= (settings.minScoreWebhook ?? 75)) {
+      try {
+        void dispatchWebhooks({
+          eventType: 'rss_lead_alert',
+          jobId: item.jobId,
+          jobTitle: item.title,
+          jobUrl: item.url,
+          dealValueUsd: budget?.midpointUsd,
+          budget: budget ? { type: budget.type, minUsd: budget.midpointUsd, maxUsd: budget.midpointUsd } : null,
+          score: itemScore,
+          memberName: 'RSS Scanner',
+          status: 'viewing',
+          notes: `Auto-detected via background RSS scanner (${budgetLabel ? `${budgetLabel} budget` : 'new posting'})`,
+          timestamp: Date.now()
+        })
+      } catch {
+        // Non-blocking webhook failure
+      }
     }
   }
 

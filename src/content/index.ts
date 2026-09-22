@@ -39,7 +39,8 @@ import type {
   JobMeta,
   TeamJobActivity,
   TrueRateBenchmark,
-  UserProfile
+  UserProfile,
+  ClientRecord
 } from '../types'
 import { getLanguage, subscribeLanguageChange, type SupportedLocale } from '../i18n'
 import { isProposalPage, scanProposalPage } from './proposal-autofill'
@@ -49,6 +50,11 @@ import {
   TEAM_ACTIVITIES_KEY
 } from '../cloud/team-tracker'
 import { getUserProfile, ACCOUNT_STORAGE_KEY } from '../cloud/account'
+import {
+  loadClientRecords,
+  matchClientAgainstRecords,
+  CLIENT_NOTES_STORAGE_KEY
+} from '../engine/client-notes'
 
 const DETAIL_TRIGGER_ID = 'gigradar-detail-trigger'
 
@@ -171,6 +177,7 @@ subscribeLanguageChange((newLocale) => {
 })
 
 let cachedTeamActivities: TeamJobActivity[] = []
+let cachedClientRecords: ClientRecord[] = []
 let currentUserId = 'local_anonymous'
 
 void getUserProfile().then((p) => {
@@ -178,6 +185,9 @@ void getUserProfile().then((p) => {
 })
 void getTeamActivities().then((acts) => {
   cachedTeamActivities = acts
+})
+void loadClientRecords().then((records) => {
+  cachedClientRecords = records
 })
 
 if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
@@ -187,6 +197,10 @@ if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
 
     if (changes[TEAM_ACTIVITIES_KEY]) {
       cachedTeamActivities = (changes[TEAM_ACTIVITIES_KEY].newValue as TeamJobActivity[]) || []
+      needsRescan = true
+    }
+    if (changes[CLIENT_NOTES_STORAGE_KEY]) {
+      cachedClientRecords = (changes[CLIENT_NOTES_STORAGE_KEY].newValue as ClientRecord[]) || []
       needsRescan = true
     }
     if (changes[ACCOUNT_STORAGE_KEY]) {
@@ -372,14 +386,20 @@ function setActive(data: EnrichmentData): void {
   const badgeEntry = badgeEntries.get(data.meta.jobId)
   if (badgeEntry?.card.isConnected) {
     badgeEntry.host.remove()
+    const matchedClient = matchClientAgainstRecords(cachedClientRecords, {
+      clientName: data.nameGuess?.name,
+      companyName: data.dossier?.company?.name,
+      feedbacks: data.meta.feedbacks
+    })
     const host = mountBadge(
       badgeEntry.card,
       {
         score: data.score.scored ? data.score.score : null,
-        tier: data.score.scored ? data.score.tier : null,
+        tier: data.score.tier,
         flagCount: data.flags.length,
         provisional: Object.values(data.signals).some((value) => value == null),
         alert: feedAlert(data.signals, data.meta.proposalCount, false, currentLocale),
+        clientRecord: matchedClient,
         locale: currentLocale
       },
       () => {
@@ -555,6 +575,11 @@ function scanFeed(): void {
       }
     }
 
+    const matchedClient = matchClientAgainstRecords(cachedClientRecords, {
+      clientName: extractClientName(parsed.meta.feedbacks)?.name,
+      feedbacks: parsed.meta.feedbacks
+    })
+
     const host = mountBadge(
       card,
       {
@@ -564,6 +589,7 @@ function scanFeed(): void {
         provisional: Object.values(signals).some((value) => value == null),
         alert,
         teamAlert,
+        clientRecord: matchedClient,
         locale: currentLocale
       },
       () => {

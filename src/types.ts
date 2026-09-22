@@ -253,6 +253,16 @@ export interface VoiceProfile {
   derivedTraits?: VoiceProfileTraits
   bannedPhrases: string[]
   bioSnippet?: string
+  customTemplate?: CustomProposalTemplate
+}
+
+export interface CustomProposalTemplate {
+  enabled: boolean
+  hookFormat?: string
+  planStep1?: string
+  planStep2?: string
+  planStep3?: string
+  ctaFormat?: string
 }
 
 export interface AutopilotProposal {
@@ -263,6 +273,19 @@ export interface AutopilotProposal {
   fullText: string
   matchedCaseStudyId?: string
   matchedCaseStudyTitle?: string
+}
+
+// Client Blacklist / Whitelist & Notes Manager
+export type ClientRecordStatus = 'blacklisted' | 'favorite'
+
+export interface ClientRecord {
+  id: string
+  clientName: string
+  companyName?: string
+  status: ClientRecordStatus
+  note?: string
+  createdAt: number
+  updatedAt: number
 }
 
 // Agency Lead Inbox & Real-Time Webhooks (Module D)
@@ -282,6 +305,7 @@ export type WebhookEventType =
   | 'job_applied'
   | 'high_value_lead'
   | 'collision_prevented'
+  | 'rss_lead_alert'
 
 export interface WebhookEventPayload {
   eventType: WebhookEventType
@@ -298,5 +322,7 @@ export interface WebhookEventPayload {
   memberEmail?: string
   status: TeamJobStatus
   notes?: string
+  score?: number
   timestamp: number
 }
+

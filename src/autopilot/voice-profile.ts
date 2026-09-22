@@ -44,7 +44,8 @@ export async function loadVoiceProfile(): Promise<VoiceProfile> {
         sampleText: stored.sampleText ?? '',
         derivedTraits: stored.derivedTraits ?? DEFAULT_VOICE_PROFILE.derivedTraits,
         bannedPhrases: Array.isArray(stored.bannedPhrases) ? stored.bannedPhrases : DEFAULT_BANNED_PHRASES,
-        bioSnippet: stored.bioSnippet ?? DEFAULT_VOICE_PROFILE.bioSnippet
+        bioSnippet: stored.bioSnippet ?? DEFAULT_VOICE_PROFILE.bioSnippet,
+        customTemplate: stored.customTemplate
       }
     }
   } catch {

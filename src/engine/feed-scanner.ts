@@ -4,6 +4,8 @@ export interface ScannerSettings {
   intervalMin: number
   minScore: number
   freshMinutes: number
+  webhookAlerts?: boolean
+  minScoreWebhook?: number
 }
 
 export const DEFAULT_SCANNER_SETTINGS: ScannerSettings = {
@@ -11,7 +13,9 @@ export const DEFAULT_SCANNER_SETTINGS: ScannerSettings = {
   rssUrl: '',
   intervalMin: 3,
   minScore: 80,
-  freshMinutes: 5
+  freshMinutes: 5,
+  webhookAlerts: false,
+  minScoreWebhook: 75
 }
 
 export interface RssJobItem {
@@ -45,7 +49,12 @@ export async function loadScannerSettings(): Promise<ScannerSettings> {
       freshMinutes:
         typeof stored.freshMinutes === 'number' && stored.freshMinutes >= 1
           ? stored.freshMinutes
-          : DEFAULT_SCANNER_SETTINGS.freshMinutes
+          : DEFAULT_SCANNER_SETTINGS.freshMinutes,
+      webhookAlerts: !!stored.webhookAlerts,
+      minScoreWebhook:
+        typeof stored.minScoreWebhook === 'number'
+          ? Math.min(Math.max(stored.minScoreWebhook, 0), 100)
+          : DEFAULT_SCANNER_SETTINGS.minScoreWebhook
     }
   } catch {
     return { ...DEFAULT_SCANNER_SETTINGS }

@@ -1,6 +1,6 @@
 import { SELECTORS, queryFirst } from '../config/selectors'
 import { findCardTitleLink } from './parse'
-import type { Tier } from '../types'
+import type { Tier, ClientRecord } from '../types'
 import { t, type SupportedLocale } from '../i18n'
 
 const BADGE_STYLES = `
@@ -38,6 +38,8 @@ const BADGE_STYLES = `
   .gr-medium:hover { border-color: rgba(245, 158, 11, .7); box-shadow: 0 6px 20px rgba(0, 0, 0, .6), 0 0 16px rgba(245, 158, 11, .2); }
   .gr-low    { border-color: rgba(239, 68, 68, .35); background: linear-gradient(180deg, #170E11, #0A0E14); }
   .gr-low:hover { border-color: rgba(239, 68, 68, .7); box-shadow: 0 6px 20px rgba(0, 0, 0, .6), 0 0 16px rgba(239, 68, 68, .2); }
+  .gr-blacklisted { border-color: rgba(239, 68, 68, 0.7) !important; background: linear-gradient(180deg, #2A0E11, #170E11) !important; color: #FCA5A5 !important; }
+  .gr-favorite { border-color: rgba(245, 158, 11, 0.7) !important; background: linear-gradient(180deg, #261D0A, #15130E) !important; color: #FCD34D !important; }
   .gr-brand {
     font-weight: 800; font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase;
     background: linear-gradient(90deg, #34D399, #10B981);
@@ -100,12 +102,8 @@ const BADGE_STYLES = `
   .gr-team-dot {
     width: 7px; height: 7px; border-radius: 999px;
     background: #A78BFA;
-    box-shadow: 0 0 8px #8B5CF6;
-    animation: gr-pulse 2s infinite ease-in-out;
-  }
-  @keyframes gr-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.85); }
+    box-shadow: 0 0 10px rgba(167, 139, 250, 0.8), 0 0 3px #8B5CF6;
+    flex: none;
   }
 `
 
@@ -127,6 +125,7 @@ export interface BadgeOptions {
   provisional?: boolean
   alert?: BadgeAlert | null
   teamAlert?: TeamAlertInfo | null
+  clientRecord?: ClientRecord | null
   locale?: SupportedLocale
 }
 
@@ -222,6 +221,38 @@ export function mountBadge(
       }
     })
     shadow.append(bar)
+  }
+
+  if (options.clientRecord) {
+    const clientBar = document.createElement('div')
+    const isBlacklisted = options.clientRecord.status === 'blacklisted'
+    clientBar.className = isBlacklisted ? 'gr-alert gr-a-danger' : 'gr-alert gr-a-high'
+    clientBar.textContent = isBlacklisted
+      ? `⛔ BLACKLISTED: ${options.clientRecord.note || 'Blocked client'}`
+      : `⭐ FAVORITE: ${options.clientRecord.note || 'Saved favorite'}`
+    clientBar.setAttribute('role', 'button')
+    clientBar.tabIndex = 0
+    clientBar.setAttribute('aria-label', clientBar.textContent)
+    clientBar.addEventListener('click', (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+      onClick()
+    })
+    clientBar.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault()
+        event.stopPropagation()
+        onClick()
+      }
+    })
+    shadow.append(clientBar)
+
+    if (isBlacklisted) {
+      pill.className = 'gr-badge gr-low gr-blacklisted'
+      card.style.opacity = '0.55'
+    } else {
+      pill.className = 'gr-badge gr-high gr-favorite'
+    }
   }
 
   if (options.teamAlert) {

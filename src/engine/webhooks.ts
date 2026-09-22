@@ -47,6 +47,8 @@ export function formatEventLabel(type: WebhookEventType): string {
       return '💎 High-Value Lead Detected'
     case 'collision_prevented':
       return '🛡️ Duplicate Bid Collision Prevented'
+    case 'rss_lead_alert':
+      return '🔥 Fresh High-Intent Lead'
     default:
       return '📌 Upwork Lead Update'
   }
@@ -58,35 +60,45 @@ export function formatSlackBlocks(payload: WebhookEventPayload) {
     ? `${payload.clientName} (${payload.hireRatePct ?? 0}% hire, ${formatUsd(payload.totalSpendUsd ?? 0)} spend)`
     : 'Unknown Client'
 
+  const fields: unknown[] = [
+    {
+      type: 'mrkdwn',
+      text: `*Status:*\n${payload.status.toUpperCase()}`
+    },
+    {
+      type: 'mrkdwn',
+      text: `*Assigned Teammate:*\n${payload.memberName}`
+    },
+    {
+      type: 'mrkdwn',
+      text: `*Estimated Value:*\n${formatUsd(payload.dealValueUsd ?? 500)}`
+    }
+  ]
+
+  if (payload.score !== undefined) {
+    fields.push({
+      type: 'mrkdwn',
+      text: `*Intent Score:*\n${payload.score}/100`
+    })
+  }
+
+  fields.push({
+    type: 'mrkdwn',
+    text: `*Client:*\n${clientInfo}`
+  })
+
   const blocks: unknown[] = [
     {
       type: 'header',
       text: {
         type: 'plain_text',
-        text: `${eventLabel}: ${payload.jobTitle.slice(0, 80)}`,
+        text: `${eventLabel}: ${payload.jobTitle}`,
         emoji: true
       }
     },
     {
       type: 'section',
-      fields: [
-        {
-          type: 'mrkdwn',
-          text: `*Status:*\n${payload.status.toUpperCase()}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*Assigned Teammate:*\n${payload.memberName}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*Estimated Value:*\n${formatUsd(payload.dealValueUsd ?? 500)}`
-        },
-        {
-          type: 'mrkdwn',
-          text: `*Client:*\n${clientInfo}`
-        }
-      ]
+      fields
     }
   ]
 
@@ -132,6 +144,7 @@ export function formatDiscordEmbed(payload: WebhookEventPayload) {
   else if (payload.eventType === 'job_claimed') color = 0xf59e0b // Amber
   else if (payload.eventType === 'collision_prevented') color = 0xef4444 // Red
   else if (payload.eventType === 'high_value_lead') color = 0x8b5cf6 // Purple
+  else if (payload.eventType === 'rss_lead_alert') color = 0xf97316 // Orange
 
   const fields = [
     {
@@ -150,6 +163,14 @@ export function formatDiscordEmbed(payload: WebhookEventPayload) {
       inline: true
     }
   ]
+
+  if (payload.score !== undefined) {
+    fields.push({
+      name: 'Intent Score',
+      value: `${payload.score}/100`,
+      inline: true
+    })
+  }
 
   if (payload.clientName || payload.hireRatePct !== undefined) {
     fields.push({

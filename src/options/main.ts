@@ -57,7 +57,18 @@ import {
   seedSampleCaseStudies
 } from '../autopilot/case-studies'
 import { calculateBidIntelligence } from '../engine/bid-intelligence'
-import type { VoiceTone, WebhookConfig } from '../types'
+import {
+  loadClientRecords,
+  saveClientRecord,
+  deleteClientRecord
+} from '../engine/client-notes'
+import type {
+  VoiceTone,
+  WebhookConfig,
+  ClientRecord,
+  ClientRecordStatus,
+  CustomProposalTemplate
+} from '../types'
 
 function escapeHtml(str: string): string {
   return str
@@ -390,6 +401,77 @@ async function initOptions(): Promise<void> {
           <!-- Dynamically populated -->
         </div>
       </div>
+
+      <!-- Custom Proposal Structure & Template Editor -->
+      <div class="space-y-3 pt-4 border-t border-white/5">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-xs font-bold text-slate-200">📝 Custom Proposal Structure & Dynamic Variables</h3>
+              <span class="rounded bg-indigo-500/20 px-1.5 py-0.5 text-[9px] font-bold text-indigo-300">CUSTOM TEMPLATE</span>
+            </div>
+            <p class="text-[11px] text-mute">Customize the 4-part proposal engine using signature frameworks and dynamic variables.</p>
+          </div>
+          <label class="flex cursor-pointer items-center gap-2">
+            <span class="text-xs font-semibold text-slate-300">Enable</span>
+            <input id="template-enabled" type="checkbox" class="peer sr-only" />
+            <span class="relative h-5 w-9 flex-none rounded-full bg-slate-700 transition-colors duration-200 after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow-md after:transition-transform after:duration-200 peer-checked:bg-indigo-500 peer-checked:after:translate-x-4"></span>
+          </label>
+        </div>
+
+        <div id="custom-template-fields" class="space-y-3 rounded-xl border border-white/5 bg-obsidian/50 p-4">
+          <!-- Variable Helper Badges -->
+          <div>
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Click to insert variables:</div>
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" class="tmpl-var-pill rounded bg-indigo-500/15 border border-indigo-500/30 px-2 py-0.5 font-mono text-[10px] font-bold text-indigo-300 hover:bg-indigo-500/30 transition-colors" data-var="{{client_name}}">{{client_name}}</button>
+              <button type="button" class="tmpl-var-pill rounded bg-indigo-500/15 border border-indigo-500/30 px-2 py-0.5 font-mono text-[10px] font-bold text-indigo-300 hover:bg-indigo-500/30 transition-colors" data-var="{{subject}}">{{subject}}</button>
+              <button type="button" class="tmpl-var-pill rounded bg-indigo-500/15 border border-indigo-500/30 px-2 py-0.5 font-mono text-[10px] font-bold text-indigo-300 hover:bg-indigo-500/30 transition-colors" data-var="{{challenge}}">{{challenge}}</button>
+              <button type="button" class="tmpl-var-pill rounded bg-indigo-500/15 border border-indigo-500/30 px-2 py-0.5 font-mono text-[10px] font-bold text-indigo-300 hover:bg-indigo-500/30 transition-colors" data-var="{{case_study}}">{{case_study}}</button>
+              <button type="button" class="tmpl-var-pill rounded bg-indigo-500/15 border border-indigo-500/30 px-2 py-0.5 font-mono text-[10px] font-bold text-indigo-300 hover:bg-indigo-500/30 transition-colors" data-var="{{tech_stack}}">{{tech_stack}}</button>
+            </div>
+          </div>
+
+          <label class="block space-y-1.5">
+            <span class="text-xs font-semibold text-slate-300">Hook / Opening Statement</span>
+            <input id="tmpl-hook" type="text" placeholder="Hi {{client_name}}, saw you're looking for help with {{challenge}}."
+              class="w-full rounded-lg border border-edge bg-obsidian px-3 py-2 text-xs text-ink placeholder:text-slate-600 focus:border-indigo-500/60 focus:outline-none" />
+          </label>
+
+          <div class="grid gap-2.5 sm:grid-cols-3">
+            <label class="block space-y-1.5">
+              <span class="text-xs font-semibold text-slate-300">Step 1: Audit & Discovery</span>
+              <textarea id="tmpl-step1" rows="2" placeholder="1. Audit existing architecture and identify bottlenecks."
+                class="w-full rounded-lg border border-edge bg-obsidian px-3 py-1.5 text-xs text-ink placeholder:text-slate-600 focus:border-indigo-500/60 focus:outline-none"></textarea>
+            </label>
+            <label class="block space-y-1.5">
+              <span class="text-xs font-semibold text-slate-300">Step 2: Build & Delivery</span>
+              <textarea id="tmpl-step2" rows="2" placeholder="2. Implement core deliverables with tests and documentation."
+                class="w-full rounded-lg border border-edge bg-obsidian px-3 py-1.5 text-xs text-ink placeholder:text-slate-600 focus:border-indigo-500/60 focus:outline-none"></textarea>
+            </label>
+            <label class="block space-y-1.5">
+              <span class="text-xs font-semibold text-slate-300">Step 3: QA & Handoff</span>
+              <textarea id="tmpl-step3" rows="2" placeholder="3. QA verification, handoff walkthrough, and 14-day warranty."
+                class="w-full rounded-lg border border-edge bg-obsidian px-3 py-1.5 text-xs text-ink placeholder:text-slate-600 focus:border-indigo-500/60 focus:outline-none"></textarea>
+            </label>
+          </div>
+
+          <label class="block space-y-1.5">
+            <span class="text-xs font-semibold text-slate-300">Closing Call-To-Action (CTA)</span>
+            <input id="tmpl-cta" type="text" placeholder="Open to a quick 10-minute sync this week to review?"
+              class="w-full rounded-lg border border-edge bg-obsidian px-3 py-2 text-xs text-ink placeholder:text-slate-600 focus:border-indigo-500/60 focus:outline-none" />
+          </label>
+
+          <div class="flex items-center justify-between pt-1">
+            <button id="tmpl-reset-btn" type="button" class="text-xs font-semibold text-slate-400 hover:text-white transition-colors">
+              Reset to Defaults
+            </button>
+            <button id="tmpl-save-btn" type="button" class="rounded-lg bg-indigo-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-indigo-500 active:scale-95 transition-all">
+              Save Template
+            </button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- Predictive Bid Intelligence & Connects ROI Simulator (Module C) -->
@@ -599,6 +681,35 @@ async function initOptions(): Promise<void> {
         </label>
       </div>
 
+      <!-- Instant Webhook Lead Pings -->
+      <div class="rounded-xl border border-white/5 bg-obsidian/40 p-4 space-y-3">
+        <label class="flex cursor-pointer items-center justify-between gap-4">
+          <span class="text-xs font-semibold text-white">
+            🔔 Instant Webhook Lead Pings (Slack / Discord)
+            <span class="mt-0.5 block text-[11px] font-normal text-mute">Automatically dispatch new high-intent jobs to configured webhooks as soon as they are detected.</span>
+          </span>
+          <input id="scanner-webhook-alerts" type="checkbox" class="peer sr-only" />
+          <span class="relative h-5 w-9 flex-none rounded-full bg-slate-700 transition-colors duration-200 after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow-md after:transition-transform after:duration-200 peer-checked:bg-brand-500 peer-checked:after:translate-x-4"></span>
+        </label>
+        <div class="grid gap-3 sm:grid-cols-2 pt-1 border-t border-white/5">
+          <label class="block space-y-1.5">
+            <span class="text-[11px] font-semibold text-mute">Min Intent Score for Webhooks</span>
+            <div class="relative">
+              <select id="scanner-min-score-webhook"
+                class="w-full cursor-pointer appearance-none rounded-lg border border-edge bg-obsidian px-3 py-1.5 pr-8 text-xs text-ink focus:border-brand-500/60 focus:outline-none">
+                <option value="75">75+ (Recommended)</option>
+                <option value="80">80+ (High Quality)</option>
+                <option value="85">85+ (Exceptional)</option>
+                <option value="70">70+ (Inclusive)</option>
+              </select>
+              <svg class="pointer-events-none absolute right-2.5 top-2.5 h-3 w-3 text-slate-400" fill="none" viewBox="0 0 10 6">
+                <path d="M1 1.5L5 4.5L9 1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </label>
+        </div>
+      </div>
+
       <div class="flex flex-wrap items-center gap-3 pt-1">
         <button id="scanner-save"
           class="rounded-xl bg-gradient-to-r from-brand-300 via-teal-300 to-brand-500 px-5 py-2 text-sm font-black text-slate-950 shadow-[0_0_16px_rgba(16,185,129,0.25)] transition-all duration-150 hover:shadow-[0_0_24px_rgba(16,185,129,0.45)] hover:scale-[1.01] active:scale-[.98]">
@@ -669,6 +780,61 @@ async function initOptions(): Promise<void> {
 
       <!-- Leads List Container -->
       <div id="leads-container" class="space-y-3 max-h-[420px] overflow-y-auto pr-1"></div>
+    </section>
+
+    <!-- Client Blacklist / Whitelist & Notes Manager -->
+    <section class="space-y-5 rounded-2xl border border-rose-500/30 bg-panel/90 p-5 shadow-card animate-fade-up">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-edge/60 pb-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-[11px] font-extrabold uppercase tracking-widest text-rose-400">
+              🛡️ Client Radar: Blacklist & VIP Favorites
+            </h2>
+            <span class="rounded bg-rose-500/20 px-1.5 py-0.5 font-mono text-[9px] font-bold text-rose-300 border border-rose-500/30">CLIENT RADAR</span>
+          </div>
+          <p class="mt-0.5 text-xs text-mute">Flag problem clients (scope creep, payment disputes) or mark top partners. Blacklisted clients dim in search results and trigger SKIP in the tactical drawer.</p>
+        </div>
+        <button id="toggle-add-client-btn" type="button" class="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-bold text-rose-300 hover:bg-rose-500/20 transition-all">
+          + Add Client Record
+        </button>
+      </div>
+
+      <!-- Add / Edit Client Form (Collapsible) -->
+      <div id="client-record-form" class="hidden rounded-xl border border-white/5 bg-obsidian/60 p-4 space-y-3">
+        <h3 class="text-xs font-bold text-slate-200">New Client Record</h3>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <input id="cr-form-name" type="text" placeholder="Client Name (e.g. John Doe)"
+            class="rounded-lg border border-edge bg-obsidian px-3 py-2 text-xs text-ink placeholder:text-slate-600 focus:border-rose-500/60 focus:outline-none" />
+          <input id="cr-form-company" type="text" placeholder="Company Name (optional)"
+            class="rounded-lg border border-edge bg-obsidian px-3 py-2 text-xs text-ink placeholder:text-slate-600 focus:border-rose-500/60 focus:outline-none" />
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <select id="cr-form-status" class="rounded-lg border border-edge bg-obsidian px-3 py-2 text-xs text-ink focus:border-rose-500/60 focus:outline-none">
+            <option value="blacklisted">⛔ Blacklist (Low intent / Scope creep / Disputed)</option>
+            <option value="favorite">⭐ Favorite (VIP Client / High paying / Great partner)</option>
+          </select>
+          <input id="cr-form-note" type="text" placeholder="Reason or Note (e.g. Scope creep, disputes milestones)"
+            class="rounded-lg border border-edge bg-obsidian px-3 py-2 text-xs text-ink placeholder:text-slate-600 focus:border-rose-500/60 focus:outline-none" />
+        </div>
+        <div class="flex justify-end gap-2">
+          <button id="cr-form-cancel" type="button" class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white">Cancel</button>
+          <button id="cr-form-save" type="button" class="rounded-lg bg-rose-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-rose-500">Save Record</button>
+        </div>
+      </div>
+
+      <!-- Filters & Search -->
+      <div class="flex flex-wrap items-center gap-3">
+        <input id="client-record-search" type="text" placeholder="Search by name, company, or notes…"
+          class="flex-1 min-w-[200px] rounded-xl border border-edge bg-obsidian px-3.5 py-2 text-xs text-ink placeholder:text-slate-600 focus:border-rose-500/60 focus:outline-none" />
+        <select id="client-record-filter" class="rounded-xl border border-edge bg-obsidian px-3 py-2 text-xs text-ink focus:border-rose-500/60 focus:outline-none">
+          <option value="all">All Records</option>
+          <option value="blacklisted">⛔ Blacklisted Only</option>
+          <option value="favorite">⭐ Favorites Only</option>
+        </select>
+      </div>
+
+      <!-- Client Records List -->
+      <div id="client-records-list" class="space-y-2.5 max-h-[380px] overflow-y-auto pr-1"></div>
     </section>
 
     <!-- Real-time Webhooks & CRM Sync (Module D) -->
@@ -908,6 +1074,8 @@ async function initOptions(): Promise<void> {
   const scannerInterval = document.getElementById('scanner-interval') as HTMLSelectElement | null
   const scannerMinScore = document.getElementById('scanner-min-score') as HTMLSelectElement | null
   const scannerFresh = document.getElementById('scanner-fresh') as HTMLSelectElement | null
+  const scannerWebhookAlerts = document.getElementById('scanner-webhook-alerts') as HTMLInputElement | null
+  const scannerMinScoreWebhook = document.getElementById('scanner-min-score-webhook') as HTMLSelectElement | null
   const scannerStatus = document.getElementById('scanner-status')
 
   function flashScannerStatus(text: string, isError: boolean): void {
@@ -947,7 +1115,9 @@ async function initOptions(): Promise<void> {
       rssUrl,
       intervalMin: parseInt(scannerInterval.value, 10),
       minScore: parseInt(scannerMinScore.value, 10),
-      freshMinutes: parseInt(scannerFresh.value, 10)
+      freshMinutes: parseInt(scannerFresh.value, 10),
+      webhookAlerts: scannerWebhookAlerts?.checked ?? false,
+      minScoreWebhook: parseInt(scannerMinScoreWebhook?.value || '75', 10)
     })
 
     try {
@@ -989,6 +1159,8 @@ async function initOptions(): Promise<void> {
     if (scannerInterval) scannerInterval.value = String(settings.intervalMin)
     if (scannerMinScore) scannerMinScore.value = String(settings.minScore)
     if (scannerFresh) scannerFresh.value = String(settings.freshMinutes)
+    if (scannerWebhookAlerts) scannerWebhookAlerts.checked = !!settings.webhookAlerts
+    if (scannerMinScoreWebhook) scannerMinScoreWebhook.value = String(settings.minScoreWebhook ?? 75)
     if (
       scannerRss &&
       !settings.rssUrl &&
@@ -1251,6 +1423,40 @@ async function initOptions(): Promise<void> {
   const addCaseStudyBtn = app.querySelector<HTMLButtonElement>('#add-case-study-btn')
   const caseStudiesList = app.querySelector<HTMLElement>('#case-studies-list')
 
+  const templateEnabled = app.querySelector<HTMLInputElement>('#template-enabled')
+  const tmplHook = app.querySelector<HTMLInputElement>('#tmpl-hook')
+  const tmplStep1 = app.querySelector<HTMLTextAreaElement>('#tmpl-step1')
+  const tmplStep2 = app.querySelector<HTMLTextAreaElement>('#tmpl-step2')
+  const tmplStep3 = app.querySelector<HTMLTextAreaElement>('#tmpl-step3')
+  const tmplCta = app.querySelector<HTMLInputElement>('#tmpl-cta')
+  const tmplResetBtn = app.querySelector<HTMLButtonElement>('#tmpl-reset-btn')
+  const tmplSaveBtn = app.querySelector<HTMLButtonElement>('#tmpl-save-btn')
+  const tmplVarPills = app.querySelectorAll<HTMLButtonElement>('.tmpl-var-pill')
+
+  let lastFocusedTmplInput: HTMLInputElement | HTMLTextAreaElement | null = null
+  ;[tmplHook, tmplStep1, tmplStep2, tmplStep3, tmplCta].forEach((input) => {
+    input?.addEventListener('focus', () => {
+      lastFocusedTmplInput = input
+    })
+  })
+
+  tmplVarPills.forEach((pill) => {
+    pill.addEventListener('click', () => {
+      const v = pill.dataset.var
+      if (!v) return
+      const target = lastFocusedTmplInput || tmplHook
+      if (target) {
+        const start = target.selectionStart ?? target.value.length
+        const end = target.selectionEnd ?? target.value.length
+        const before = target.value.slice(0, start)
+        const after = target.value.slice(end)
+        target.value = before + v + after
+        target.focus()
+        target.setSelectionRange(start + v.length, start + v.length)
+      }
+    })
+  })
+
   function flashVoiceStatus(msg: string): void {
     if (!voiceSaveStatus) return
     voiceSaveStatus.textContent = msg
@@ -1267,7 +1473,49 @@ async function initOptions(): Promise<void> {
       toneTraitsDisplay.classList.remove('hidden')
       toneTraitsDisplay.textContent = `Pace: ${profile.derivedTraits.sentenceLength} · Style: ${profile.derivedTraits.formality} · Focus: ${profile.derivedTraits.focusAngle}`
     }
+    if (profile.customTemplate) {
+      if (templateEnabled) templateEnabled.checked = profile.customTemplate.enabled
+      if (tmplHook) tmplHook.value = profile.customTemplate.hookFormat || ''
+      if (tmplStep1) tmplStep1.value = profile.customTemplate.planStep1 || ''
+      if (tmplStep2) tmplStep2.value = profile.customTemplate.planStep2 || ''
+      if (tmplStep3) tmplStep3.value = profile.customTemplate.planStep3 || ''
+      if (tmplCta) tmplCta.value = profile.customTemplate.ctaFormat || ''
+    }
   }
+
+  async function saveCustomTemplate(): Promise<void> {
+    const current = await loadVoiceProfile()
+    const customTemplate: CustomProposalTemplate = {
+      enabled: templateEnabled?.checked ?? false,
+      hookFormat: tmplHook?.value.trim() || undefined,
+      planStep1: tmplStep1?.value.trim() || undefined,
+      planStep2: tmplStep2?.value.trim() || undefined,
+      planStep3: tmplStep3?.value.trim() || undefined,
+      ctaFormat: tmplCta?.value.trim() || undefined
+    }
+    await saveVoiceProfile({
+      ...current,
+      customTemplate
+    })
+    flashVoiceStatus('Proposal template saved ✓')
+  }
+
+  templateEnabled?.addEventListener('change', () => {
+    void saveCustomTemplate()
+  })
+
+  tmplSaveBtn?.addEventListener('click', () => {
+    void saveCustomTemplate()
+  })
+
+  tmplResetBtn?.addEventListener('click', async () => {
+    if (tmplHook) tmplHook.value = 'Hi {{client_name}}, saw you need help with {{subject}}. Having delivered similar projects recently, I can take ownership of this build from day one.'
+    if (tmplStep1) tmplStep1.value = 'Audit existing requirements, technical dependencies, and edge cases.'
+    if (tmplStep2) tmplStep2.value = 'Implement {{subject}} architecture with milestone demos and automated verification.'
+    if (tmplStep3) tmplStep3.value = 'Production deployment, documentation, and zero-downtime handoff.'
+    if (tmplCta) tmplCta.value = 'What does your target milestone timeline look like? If you\'d like, I can walk you through the technical approach tomorrow.'
+    await saveCustomTemplate()
+  })
 
   async function saveCurrentVoiceProfile(): Promise<void> {
     const current = await loadVoiceProfile()
@@ -1829,9 +2077,159 @@ async function initOptions(): Promise<void> {
     })
   }
 
+  async function initClientNotesManager(): Promise<void> {
+    const toggleAddBtn = document.getElementById('toggle-add-client-btn')
+    const formBox = document.getElementById('client-record-form')
+    const formName = document.getElementById('cr-form-name') as HTMLInputElement | null
+    const formCompany = document.getElementById('cr-form-company') as HTMLInputElement | null
+    const formStatus = document.getElementById('cr-form-status') as HTMLSelectElement | null
+    const formNote = document.getElementById('cr-form-note') as HTMLInputElement | null
+    const formCancel = document.getElementById('cr-form-cancel')
+    const formSave = document.getElementById('cr-form-save')
+
+    const searchInput = document.getElementById('client-record-search') as HTMLInputElement | null
+    const filterSelect = document.getElementById('client-record-filter') as HTMLSelectElement | null
+    const recordsList = document.getElementById('client-records-list')
+
+    let allRecords: ClientRecord[] = []
+    let editingRecordId: string | null = null
+
+    const fetchAndRender = async () => {
+      allRecords = await loadClientRecords()
+      renderRecords()
+    }
+
+    const renderRecords = () => {
+      if (!recordsList) return
+      const query = (searchInput?.value || '').toLowerCase().trim()
+      const filter = filterSelect?.value || 'all'
+
+      const filtered = allRecords.filter((rec) => {
+        if (filter === 'blacklisted' && rec.status !== 'blacklisted') return false
+        if (filter === 'favorite' && rec.status !== 'favorite') return false
+        if (!query) return true
+        const matchName = rec.clientName.toLowerCase().includes(query)
+        const matchCompany = (rec.companyName || '').toLowerCase().includes(query)
+        const matchNote = (rec.note || '').toLowerCase().includes(query)
+        return matchName || matchCompany || matchNote
+      })
+
+      if (filtered.length === 0) {
+        recordsList.innerHTML = `
+          <div class="rounded-xl border border-white/5 bg-obsidian/40 p-6 text-center text-xs text-mute">
+            ${allRecords.length === 0 ? 'No clients saved yet. Add clients to your blacklist or favorites list using the button above or from the tactical drawer.' : 'No client records match your search filter.'}
+          </div>`
+        return
+      }
+
+      recordsList.innerHTML = filtered.map((rec) => {
+        const isBlack = rec.status === 'blacklisted'
+        const badgeClass = isBlack
+          ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
+          : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+        const badgeText = isBlack ? '⛔ Blacklisted' : '⭐ Favorite'
+        const dateStr = new Date(rec.updatedAt || rec.createdAt).toLocaleDateString()
+
+        return `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-white/5 bg-obsidian/60 p-3.5 hover:border-white/10 transition-colors">
+            <div class="min-w-0 flex-1 space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="rounded px-2 py-0.5 text-[10px] font-black uppercase font-mono border ${badgeClass}">
+                  ${badgeText}
+                </span>
+                <span class="font-bold text-white text-xs truncate">${escapeHtml(rec.clientName)}</span>
+                ${rec.companyName ? `<span class="text-slate-400 text-xs font-medium">(${escapeHtml(rec.companyName)})</span>` : ''}
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed">${rec.note ? escapeHtml(rec.note) : '<span class="text-slate-500 italic">No notes recorded</span>'}</p>
+              <div class="text-[10px] text-slate-500 font-mono">Added: ${dateStr}</div>
+            </div>
+            <div class="flex items-center gap-2 flex-none">
+              <button type="button" class="cr-edit-btn rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-semibold text-slate-300 hover:text-white transition-colors" data-id="${rec.id}">
+                Edit
+              </button>
+              <button type="button" class="cr-delete-btn rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-400 hover:bg-red-500/20 transition-colors" data-id="${rec.id}">
+                Remove
+              </button>
+            </div>
+          </div>`
+      }).join('')
+
+      recordsList.querySelectorAll<HTMLButtonElement>('.cr-delete-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id
+          if (!id) return
+          await deleteClientRecord(id)
+          await fetchAndRender()
+        })
+      })
+
+      recordsList.querySelectorAll<HTMLButtonElement>('.cr-edit-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id
+          const rec = allRecords.find((r) => r.id === id)
+          if (!rec || !formBox) return
+          editingRecordId = rec.id
+          if (formName) formName.value = rec.clientName
+          if (formCompany) formCompany.value = rec.companyName || ''
+          if (formStatus) formStatus.value = rec.status
+          if (formNote) formNote.value = rec.note || ''
+          formBox.classList.remove('hidden')
+          formName?.focus()
+        })
+      })
+    }
+
+    toggleAddBtn?.addEventListener('click', () => {
+      if (!formBox) return
+      editingRecordId = null
+      if (formName) formName.value = ''
+      if (formCompany) formCompany.value = ''
+      if (formNote) formNote.value = ''
+      formBox.classList.toggle('hidden')
+      if (!formBox.classList.contains('hidden')) {
+        formName?.focus()
+      }
+    })
+
+    formCancel?.addEventListener('click', () => {
+      formBox?.classList.add('hidden')
+      editingRecordId = null
+    })
+
+    formSave?.addEventListener('click', async () => {
+      const name = formName?.value.trim() || ''
+      const company = formCompany?.value.trim() || ''
+      const status = (formStatus?.value as ClientRecordStatus) || 'blacklisted'
+      const note = formNote?.value.trim() || ''
+
+      if (!name && !company) {
+        alert('Please enter a client name or company name.')
+        return
+      }
+
+      await saveClientRecord({
+        id: editingRecordId || undefined,
+        clientName: name || company,
+        companyName: company || undefined,
+        status,
+        note: note || undefined
+      })
+
+      formBox?.classList.add('hidden')
+      editingRecordId = null
+      await fetchAndRender()
+    })
+
+    searchInput?.addEventListener('input', renderRecords)
+    filterSelect?.addEventListener('change', renderRecords)
+
+    await fetchAndRender()
+  }
+
   initBidSimulator()
   void initLeadInbox()
   void initWebhookSettings()
+  void initClientNotesManager()
 
   void loadVoiceSettings()
   void renderCaseStudies()

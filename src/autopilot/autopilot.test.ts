@@ -223,4 +223,36 @@ describe('Autopilot Proposal Engine', () => {
     expect(proposal.hook).toContain('Elena')
     expect(proposal.hook).toContain('Direct and hyper-technical')
   })
+
+  it('interpolates custom template variables correctly', async () => {
+    const customTemplateProfile: VoiceProfile = {
+      ...DEFAULT_VOICE_PROFILE,
+      customTemplate: {
+        enabled: true,
+        hookFormat: 'Greetings {{client_name}}, I see you need assistance with {{subject}}.',
+        planStep1: 'Phase 1: Deep dive into {{subject}} requirements.',
+        planStep2: 'Phase 2: Custom implementation avoiding {{challenge}}.',
+        planStep3: 'Phase 3: Launch with {{case_study_title}} standards.',
+        ctaFormat: 'Let us connect on {{client_name}} schedule.'
+      }
+    }
+
+    const proposal = await generateAutopilotProposal({
+      jobMeta: {
+        jobId: '~01982738',
+        title: 'Python Scraper for Real Estate',
+        descriptionSnippet: 'Scrape property listings daily.'
+      },
+      clientName: 'Marcus',
+      voiceProfile: customTemplateProfile,
+      caseStudy: null
+    })
+
+    expect(proposal.hook).toBe('Greetings Marcus, I see you need assistance with backend development.')
+    expect(proposal.executionPlan[0]).toBe('Phase 1: Deep dive into backend development requirements.')
+    expect(proposal.executionPlan[1]).toContain('Phase 2: Custom implementation avoiding')
+    expect(proposal.executionPlan[2]).toContain('Phase 3: Launch with proven delivery benchmarks standards.')
+    expect(proposal.closingCta).toBe('Let us connect on Marcus schedule.')
+  })
 })
+
