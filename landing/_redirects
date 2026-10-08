@@ -1,0 +1,3 @@
+# Cloudflare Pages 301 Redirects
+https://www.gigradar.dev/* https://gigradar.dev/:splat 301
+http://gigradar.dev/* https://gigradar.dev/:splat 301

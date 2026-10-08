@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/gigradar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm"><img src="https://img.shields.io/badge/Chrome_Web_Store-Live-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
-  <a href="https://github.com/comerade2134/GigRadar/releases"><img src="https://img.shields.io/badge/Release-v0.3.2-10B981?style=for-the-badge&logo=github&logoColor=white" alt="Release v0.3.2"></a>
+  <a href="https://github.com/comerade2134/GigRadar/releases"><img src="https://img.shields.io/badge/Release-v0.3.3-10B981?style=for-the-badge&logo=github&logoColor=white" alt="Release v0.3.3"></a>
   <a href="https://developer.chrome.com/docs/extensions/mv3/intro/"><img src="https://img.shields.io/badge/Manifest-V3-10B981?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Manifest V3"></a>
   <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
   <a href="https://vitejs.dev/"><img src="https://img.shields.io/badge/Vite-5.4-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"></a>
@@ -17,7 +17,7 @@
 
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/gigradar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm"><strong>Install on Chrome Web Store</strong></a> •
-  <a href="https://gigradar-3tj.pages.dev/"><strong>Live Website</strong></a> •
+  <a href="https://gigradar.dev/"><strong>Live Website</strong></a> •
   <a href="#-quick-install-beta"><strong>Quick Install (Beta)</strong></a> •
   <a href="#-features"><strong>Features</strong></a> •
   <a href="#-the-problem--gigradar-solution"><strong>Comparison</strong></a> •
