@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="scroll-smooth bg-black text-[#f5f5f7]">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,11 +20,25 @@
       darkMode: 'class',
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', '"Helvetica Neue"', 'sans-serif'],
+            mono: ['"SF Mono"', 'Menlo', 'Monaco', 'Courier New', 'monospace']
+          },
           colors: {
-            obsidian: '#080A0D',
-            panel: '#0E1217',
-            raised: '#151B22',
-            edge: '#212B36',
+            apple: {
+              black: '#000000',
+              space: '#0b0c0e',
+              card: '#121316',
+              raised: '#18191d',
+              border: 'rgba(255, 255, 255, 0.08)',
+              subtext: '#86868b',
+              body: '#f5f5f7',
+              blue: '#2997ff',
+              green: '#30d158',
+              indigo: '#5e5ce6',
+              purple: '#bf5af2',
+              red: '#ff453a'
+            },
             brand: {
               100: '#D1FAE5',
               200: '#A7F3D0',
@@ -41,118 +55,137 @@
   </script>
   <style>
     @keyframes pulseGlow {
-      0%, 100% { opacity: 0.4; transform: scale(1); }
-      50% { opacity: 0.8; transform: scale(1.05); }
+      0%, 100% { opacity: 0.35; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.04); }
     }
-    .glow-bg {
-      animation: pulseGlow 8s ease-in-out infinite;
+    .glow-apple {
+      animation: pulseGlow 10s ease-in-out infinite;
+    }
+    .apple-glass {
+      background: rgba(18, 19, 22, 0.72);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+    .apple-glass-card {
+      background: linear-gradient(180deg, rgba(24, 25, 29, 0.8) 0%, rgba(14, 15, 18, 0.95) 100%);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    .apple-glass-card:hover {
+      border-color: rgba(255, 255, 255, 0.18);
     }
   </style>
 </head>
-<body class="bg-obsidian text-slate-100 font-sans antialiased selection:bg-brand-500/30 selection:text-white">
+<body class="bg-black text-[#f5f5f7] font-sans antialiased selection:bg-brand-500/30 selection:text-white">
 
-  <!-- Ambient Glow -->
-  <div class="pointer-events-none fixed -top-40 left-1/2 -translate-x-1/2 h-[550px] w-[1000px] rounded-full bg-brand-500/[0.08] blur-[140px] glow-bg"></div>
-  <div class="pointer-events-none fixed top-[40%] right-[-10%] h-[450px] w-[600px] rounded-full bg-indigo-500/[0.06] blur-[150px]"></div>
+  <!-- Apple Ambient Background Mesh Lights -->
+  <div class="pointer-events-none fixed -top-48 left-1/2 -translate-x-1/2 h-[600px] w-[1100px] rounded-full bg-gradient-to-b from-brand-500/[0.12] via-teal-500/[0.06] to-transparent blur-[160px] glow-apple"></div>
+  <div class="pointer-events-none fixed top-[45%] right-[-10%] h-[500px] w-[650px] rounded-full bg-indigo-600/[0.07] blur-[170px]"></div>
 
-  <!-- Navigation -->
-  <nav class="sticky top-0 z-50 border-b border-edge/80 bg-obsidian/80 backdrop-blur-xl">
-    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+  <!-- Apple Minimalist Global Navigation Bar (44px height) -->
+  <header class="sticky top-0 z-50 border-b border-white/[0.08] bg-black/75 backdrop-blur-2xl">
+    <div class="max-w-6xl mx-auto px-6 h-11 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 p-0.5 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-          <div class="h-full w-full bg-obsidian rounded-[10px] flex items-center justify-center">
-            <svg class="w-5 h-5 text-brand-400" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-            </svg>
-          </div>
-        </div>
-        <span class="font-extrabold text-lg tracking-tight text-white">GigRadar</span>
-        <span class="rounded-full border border-brand-500/30 bg-brand-500/10 px-2.5 py-0.5 text-[10px] font-bold text-brand-400">
+        <a href="#" class="flex items-center gap-2 text-white hover:opacity-85 transition-opacity">
+          <!--  Apple Logo Vector -->
+          <svg class="w-3.5 h-4 fill-current text-white" viewBox="0 0 170 170">
+            <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.67-7.81-11.96-14.34-6.85-10.45-12.01-22.18-15.48-35.18-3.48-13-5.22-25.12-5.22-36.37 0-14.79 3.65-27.18 10.96-37.16 7.3-9.99 16.55-15.08 27.73-15.29 4.35 0 9.4 1.15 15.15 3.44 5.76 2.3 9.49 3.49 11.2 3.58 1.48-.1 5.34-1.34 11.59-3.73 6.25-2.39 11.45-3.45 15.61-3.18 12.07.76 21.6 5.25 28.58 13.48-10.45 6.31-15.56 15.15-15.34 26.54.22 9.13 3.73 16.85 10.53 23.16 6.8 6.31 15.02 9.87 24.66 10.68-2.18 6.96-4.99 14.12-8.43 21.49zm-33.15-114.7c0-7.39 2.66-14.11 7.97-20.17 5.32-6.06 11.89-9.77 19.72-11.13.22 1.09.33 2.18.33 3.26 0 7.28-2.82 14.23-8.47 20.85-5.65 6.63-12.38 10.42-20.19 11.39-.22-1.41-.36-2.81-.36-4.2z"/>
+          </svg>
+          <span class="font-semibold text-sm tracking-tight">GigRadar</span>
+        </a>
+        <span class="rounded-full border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 text-[10px] font-medium text-brand-300">
           v0.3.3 Live
         </span>
       </div>
 
-      <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+      <nav class="hidden md:flex items-center gap-7 text-xs font-normal text-[#86868b]">
         <a href="#launch-film" class="hover:text-white transition-colors flex items-center gap-1.5 text-brand-300">
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse"></span>
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-brand-400 animate-ping"></span>
           Launch Film
         </a>
         <a href="#features" class="hover:text-white transition-colors">Features</a>
         <a href="#calculator" class="hover:text-white transition-colors">ROI Calculator</a>
-        <a href="#agency" class="hover:text-white transition-colors">Agency Suite</a>
         <a href="#pricing" class="hover:text-white transition-colors">Pricing</a>
-      </div>
+        <a href="#install" class="hover:text-white transition-colors">Setup Guide</a>
+      </nav>
 
       <div class="flex items-center gap-3">
-        <a href="./gigradar-0.3.3.zip" download class="rounded-xl bg-gradient-to-r from-brand-400 to-brand-500 px-4 py-2 text-xs font-black text-slate-950 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all hover:scale-[1.02] active:scale-[.98]">
-          ⬇️ Download Extension
+        <a href="./gigradar-0.3.3.zip" download class="rounded-full bg-white text-black px-4 py-1 text-xs font-semibold hover:bg-slate-200 transition-all active:scale-[0.98]">
+          Download Free
         </a>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Hero Section -->
-  <header class="relative pt-24 pb-20 px-6 text-center max-w-5xl mx-auto">
-    <div class="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-3.5 py-1 text-xs font-semibold text-brand-300 mb-8">
-      <span class="flex h-2 w-2 rounded-full bg-brand-400 animate-ping"></span>
-      Stop Wasting Upwork Connects on Fake & Ghost Jobs
-    </div>
-
-    <h1 class="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white leading-[1.08] mb-6">
-      The Tactical Operating System for <span class="bg-gradient-to-r from-emerald-300 via-teal-300 to-indigo-400 bg-clip-text text-transparent inline-block" style="-webkit-background-clip: text; -webkit-text-fill-color: transparent;">Upwork Freelancers & Agencies</span>
-    </h1>
-
-    <p class="text-lg sm:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed mb-10">
-      Reveals verified client intent scores, scrubs AI proposal fluff with customized case study receipts, models the 4-slot boost auction, and stops agency team bidding collisions.
-    </p>
-
-    <div class="flex flex-wrap items-center justify-center gap-4 mb-16">
-      <a href="./gigradar-0.3.3.zip" download class="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-brand-400 via-emerald-400 to-teal-400 px-8 py-4 text-base font-black text-slate-950 shadow-[0_0_35px_rgba(16,185,129,0.35)] hover:shadow-[0_0_50px_rgba(16,185,129,0.6)] transition-all hover:scale-[1.02] active:scale-[.98]">
-        <span>⬇️ Download Free v0.3.3 (.zip)</span>
-      </a>
-      <a href="#launch-film" id="btn-hero-watch-film" class="flex items-center gap-2 rounded-2xl border border-brand-500/40 bg-brand-500/10 px-6 py-4 text-sm font-bold text-brand-300 hover:bg-brand-500/20 hover:text-white transition-all shadow-[0_0_20px_rgba(16,185,129,0.15)]">
-        <span>▶ Watch Film (20s)</span>
-      </a>
-      <a href="#install" class="rounded-2xl border border-edge bg-raised/80 px-6 py-4 text-sm font-bold text-slate-200 hover:border-brand-500/40 hover:text-white transition-all">
-        📖 2-Min Install Guide
-      </a>
-    </div>
-
-    <!-- Proof Badges -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
-      <div class="rounded-2xl border border-edge bg-panel/80 p-4">
-        <div class="text-2xl font-black text-brand-400">148+</div>
-        <div class="text-xs text-slate-400 mt-1">Connects Saved / Mo</div>
-      </div>
-      <div class="rounded-2xl border border-edge bg-panel/80 p-4">
-        <div class="text-2xl font-black text-indigo-400">74%</div>
-        <div class="text-xs text-slate-400 mt-1">Higher Client Reply Rate</div>
-      </div>
-      <div class="rounded-2xl border border-edge bg-panel/80 p-4">
-        <div class="text-2xl font-black text-sky-400">4 Slots</div>
-        <div class="text-xs text-slate-400 mt-1">Boost Auction Modeled</div>
-      </div>
-      <div class="rounded-2xl border border-edge bg-panel/80 p-4">
-        <div class="text-2xl font-black text-teal-400">0 Collisions</div>
-        <div class="text-xs text-slate-400 mt-1">Agency Claim Locks</div>
       </div>
     </div>
   </header>
 
-  <!-- Apple-Style Mac Launch Film Floating Player -->
-  <section id="launch-film" class="relative max-w-5xl mx-auto px-6 -mt-8 mb-24 z-20">
-    <div class="text-center mb-6">
-      <div class="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-300 mb-2">
-        <span class="text-white"></span> Keynote Film • 1080p Master with Sound
-      </div>
-      <h2 class="text-2xl sm:text-3xl font-black text-white">Experience GigRadar in Action</h2>
-      <p class="text-xs sm:text-sm text-slate-400 mt-1">Watch how the dynamic Mac notch reveals client intent, scrubs proposal fluff, and coordinates team bids.</p>
+  <!-- Keynote Hero Section -->
+  <section class="relative pt-24 pb-14 px-6 text-center max-w-5xl mx-auto">
+    <!-- Apple Eyebrow Badge -->
+    <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-medium text-brand-300 mb-8 backdrop-blur-xl">
+      <span class="flex h-1.5 w-1.5 rounded-full bg-brand-400"></span>
+      The Tactical Operating System for Upwork
     </div>
 
-    <!-- Floating Mac Hardware Frame -->
-    <div class="relative group rounded-2xl sm:rounded-3xl border border-edge/80 bg-raised/90 p-2 sm:p-3 shadow-[0_25px_80px_rgba(0,0,0,0.85)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_30px_100px_rgba(16,185,129,0.25)]">
+    <h1 class="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-[-0.035em] text-white leading-[1.06] mb-6">
+      Know the client before you spend a single <span class="bg-gradient-to-r from-emerald-300 via-teal-300 to-indigo-400 bg-clip-text text-transparent inline-block" style="-webkit-background-clip: text; -webkit-text-fill-color: transparent;">Connect.</span>
+    </h1>
+
+    <p class="text-lg sm:text-xl text-[#86868b] max-w-2xl mx-auto leading-relaxed mb-10 font-normal">
+      Deterministic client intent telemetry. AI proposal fluff scrubbed with verified case study receipts. 4-slot boost auction modeling. Instant team claim synchronization.
+    </p>
+
+    <!-- Apple Pill Buttons -->
+    <div class="flex flex-wrap items-center justify-center gap-4 mb-16">
+      <a href="./gigradar-0.3.3.zip" download class="flex items-center gap-2.5 rounded-full bg-gradient-to-r from-brand-400 to-brand-500 px-7 py-3 text-sm font-bold text-slate-950 shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:shadow-[0_0_45px_rgba(16,185,129,0.5)] transition-all hover:scale-[1.02] active:scale-[0.98]">
+        <span>⬇️ Download Free v0.3.3 (.zip)</span>
+      </a>
+      <a href="#launch-film" id="btn-hero-watch-film" class="flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] px-6 py-3 text-sm font-medium text-white transition-all backdrop-blur-xl hover:scale-[1.02] active:scale-[0.98]">
+        <span>▶ Watch Film (20s)</span>
+      </a>
+      <a href="#install" class="flex items-center gap-1.5 text-xs font-medium text-brand-400 hover:text-brand-300 transition-colors px-2 py-3">
+        <span>Setup in 2 minutes</span>
+        <span>›</span>
+      </a>
+    </div>
+
+    <!-- Apple Keynote Stat Callouts -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto pt-2">
+      <div class="apple-glass rounded-2xl p-5 text-center">
+        <div class="text-3xl font-extrabold tracking-tight text-brand-400">148+</div>
+        <div class="text-[11px] text-[#86868b] font-medium mt-1">Connects Saved / Mo</div>
+      </div>
+      <div class="apple-glass rounded-2xl p-5 text-center">
+        <div class="text-3xl font-extrabold tracking-tight text-indigo-400">74%</div>
+        <div class="text-[11px] text-[#86868b] font-medium mt-1">Higher Reply Rate</div>
+      </div>
+      <div class="apple-glass rounded-2xl p-5 text-center">
+        <div class="text-3xl font-extrabold tracking-tight text-teal-300">4 Slots</div>
+        <div class="text-[11px] text-[#86868b] font-medium mt-1">Boost Auction Engine</div>
+      </div>
+      <div class="apple-glass rounded-2xl p-5 text-center">
+        <div class="text-3xl font-extrabold tracking-tight text-emerald-300">0 Collisions</div>
+        <div class="text-[11px] text-[#86868b] font-medium mt-1">Agency Claim Locks</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Apple-Style Mac Hardware Launch Film Floating Player -->
+  <section id="launch-film" class="relative max-w-5xl mx-auto px-6 mb-32 z-20">
+    <div class="text-center mb-6">
+      <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1 text-[11px] font-semibold text-brand-300 mb-2">
+        <span></span> Built In Code • 1080p Keynote Film
+      </div>
+      <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-white">Experience GigRadar in Action</h2>
+      <p class="text-xs sm:text-sm text-[#86868b] mt-1 font-normal">Watch how the dynamic Mac notch reveals client intent, scrubs proposal fluff, and coordinates team bids.</p>
+    </div>
+
+    <!-- Floating Mac Hardware Frame with Ambient Glow -->
+    <div class="relative group rounded-2xl sm:rounded-[28px] border border-white/10 bg-[#121316]/90 p-2 sm:p-3 shadow-[0_30px_90px_rgba(0,0,0,0.9)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_35px_110px_rgba(16,185,129,0.25)]">
       <!-- Ambient Glow Behind Device -->
-      <div class="pointer-events-none absolute -inset-1 rounded-3xl bg-gradient-to-r from-brand-500/25 via-indigo-500/20 to-teal-500/25 blur-2xl opacity-70 group-hover:opacity-100 transition-opacity"></div>
+      <div class="pointer-events-none absolute -inset-1 rounded-[30px] bg-gradient-to-r from-brand-500/25 via-indigo-500/20 to-teal-500/25 blur-2xl opacity-65 group-hover:opacity-100 transition-opacity"></div>
       
       <!-- Display Screen Bezel -->
       <div class="relative overflow-hidden rounded-xl sm:rounded-2xl bg-black border border-white/10 aspect-video shadow-inner">
@@ -167,24 +200,24 @@
           class="w-full h-full object-cover"
         ></video>
 
-        <!-- Floating Glass HUD Controls -->
+        <!-- Floating Apple Glass HUD Controls -->
         <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-auto">
           <div class="flex items-center gap-2">
-            <button id="video-play-btn" class="flex items-center gap-2 rounded-xl bg-black/70 hover:bg-black/90 backdrop-blur-md border border-white/20 px-3 py-1.5 text-xs font-bold text-white transition-all shadow-lg hover:scale-[1.03]">
+            <button id="video-play-btn" class="flex items-center gap-2 rounded-full bg-black/75 hover:bg-black/90 backdrop-blur-md border border-white/20 px-3.5 py-1.5 text-xs font-semibold text-white transition-all shadow-lg hover:scale-[1.03]">
               <span id="video-play-icon">⏸</span>
               <span id="video-play-text">Pause</span>
             </button>
-            <button id="video-sound-btn" class="flex items-center gap-2 rounded-xl bg-black/70 hover:bg-black/90 backdrop-blur-md border border-white/20 px-3 py-1.5 text-xs font-bold text-white transition-all shadow-lg hover:scale-[1.03]">
+            <button id="video-sound-btn" class="flex items-center gap-2 rounded-full bg-black/75 hover:bg-black/90 backdrop-blur-md border border-white/20 px-3.5 py-1.5 text-xs font-semibold text-white transition-all shadow-lg hover:scale-[1.03]">
               <span id="video-sound-icon">🔇</span>
               <span id="video-sound-text">Unmute</span>
             </button>
           </div>
           
           <div class="flex items-center gap-2">
-            <span class="hidden sm:inline-flex rounded-xl bg-brand-500/20 border border-brand-500/40 px-3 py-1 text-[11px] font-bold text-brand-300 backdrop-blur-md">
+            <span class="hidden sm:inline-flex rounded-full bg-brand-500/20 border border-brand-500/35 px-3 py-1 text-[11px] font-semibold text-brand-300 backdrop-blur-md">
                20s Keynote
             </span>
-            <button id="video-fullscreen-btn" title="Toggle Fullscreen" class="rounded-xl bg-black/70 hover:bg-black/90 backdrop-blur-md border border-white/20 px-3 py-1.5 text-xs font-bold text-white transition-all shadow-lg hover:scale-[1.03]">
+            <button id="video-fullscreen-btn" title="Toggle Fullscreen" class="rounded-full bg-black/75 hover:bg-black/90 backdrop-blur-md border border-white/20 px-3 py-1.5 text-xs font-semibold text-white transition-all shadow-lg hover:scale-[1.03]">
               ⛶ Fullscreen
             </button>
           </div>
@@ -193,247 +226,342 @@
     </div>
   </section>
 
-  <!-- Interactive Connects Burn Calculator -->
-  <section id="calculator" class="py-20 px-6 bg-panel/40 border-y border-edge/60 relative">
+  <!-- Apple Bento Grid Feature Showcase -->
+  <section id="features" class="py-24 px-6 max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <div class="text-xs font-semibold uppercase tracking-widest text-brand-400 mb-2">Tactical Capabilities</div>
+      <h3 class="text-3xl sm:text-5xl font-extrabold tracking-[-0.03em] text-white">Engineered for absolute certainty.</h3>
+      <p class="text-sm text-[#86868b] max-w-xl mx-auto mt-2">Every pixel designed to give you unfair asymmetric advantage on the Upwork feed.</p>
+    </div>
+
+    <!-- Bento Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <!-- Bento 1: Large Intent Telemetry (Spans 2 columns) -->
+      <div class="md:col-span-2 apple-glass-card rounded-[28px] p-8 sm:p-10 flex flex-col justify-between group">
+        <div>
+          <div class="flex items-center justify-between mb-6">
+            <span class="rounded-full border border-brand-500/30 bg-brand-500/10 px-3 py-1 text-xs font-semibold text-brand-300">
+              01 • Intent Telemetry
+            </span>
+            <span class="text-xs font-mono text-[#86868b]">100% Deterministic Math</span>
+          </div>
+          <h4 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-3">
+            0–100 Client Intent Scoring.
+          </h4>
+          <p class="text-sm text-[#86868b] leading-relaxed max-w-xl mb-8">
+            Instantly stamped beneath every job listing on Upwork. Reveals verified hire rate, historical average spend per contract, and flags payment unverified listings before you click.
+          </p>
+        </div>
+
+        <!-- Interactive Visual Telemetry Card -->
+        <div class="rounded-2xl border border-white/10 bg-black/50 p-5 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="relative w-14 h-14 flex items-center justify-center">
+              <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                <path class="text-white/10 stroke-current" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="text-brand-400 stroke-current" stroke-dasharray="94, 100" stroke-width="3" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+              <span class="absolute font-mono font-bold text-base text-brand-400">94</span>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                <span>Verified Buyer Profile</span>
+                <span class="text-brand-400">✓</span>
+              </div>
+              <div class="text-[11px] text-[#86868b]">89% Hire Rate • $48.2K Spent</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="rounded-xl border border-brand-500/30 bg-brand-500/10 px-3 py-1 text-xs font-semibold text-brand-300">
+              High Probability
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bento 2: Client Name & True Pay (1 column) -->
+      <div class="apple-glass-card rounded-[28px] p-8 flex flex-col justify-between group">
+        <div>
+          <div class="flex items-center justify-between mb-6">
+            <span class="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-300">
+              02 • Dossier
+            </span>
+            <span class="text-xs font-mono text-[#86868b]">Regex Scanner</span>
+          </div>
+          <h4 class="text-xl font-extrabold tracking-tight text-white mb-2">
+            Never say "Hi there" again.
+          </h4>
+          <p class="text-xs text-[#86868b] leading-relaxed mb-6">
+            Extracts the hiring manager's real first name from historical reviews with confidence scoring.
+          </p>
+        </div>
+
+        <div class="rounded-2xl border border-white/10 bg-black/50 p-4 space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center font-bold text-xs text-white">
+              SM
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white">Sarah Mitchell</div>
+              <div class="text-[10px] text-indigo-300">98% Review Match ✓</div>
+            </div>
+          </div>
+          <div class="pt-2 border-t border-white/10 flex justify-between items-center text-xs">
+            <span class="text-[#86868b]">True Avg Rate</span>
+            <span class="font-bold text-brand-400">$42.50 / hr</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bento 3: Waste & Scam Shield (1 column) -->
+      <div class="apple-glass-card rounded-[28px] p-8 flex flex-col justify-between group">
+        <div>
+          <div class="flex items-center justify-between mb-6">
+            <span class="rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-xs font-semibold text-rose-300">
+              03 • Shield
+            </span>
+            <span class="text-xs font-mono text-[#86868b]">Zero Telemetry</span>
+          </div>
+          <h4 class="text-xl font-extrabold tracking-tight text-white mb-2">
+            Ghost Job Radar.
+          </h4>
+          <p class="text-xs text-[#86868b] leading-relaxed mb-6">
+            Instant red-flag badges on 0% hire rate listings, 50+ bid saturation traps, and off-platform Telegram scams.
+          </p>
+        </div>
+
+        <div class="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-center">
+          <div class="text-xs font-bold text-rose-300">⚠️ Connects Trap Detected</div>
+          <div class="text-2xl font-extrabold text-white mt-1">+14 Connects Saved</div>
+          <div class="text-[10px] text-[#86868b] mt-0.5">$2.10 Capital Protected</div>
+        </div>
+      </div>
+
+      <!-- Bento 4: Proposal Autopilot (1 column) -->
+      <div class="apple-glass-card rounded-[28px] p-8 flex flex-col justify-between group">
+        <div>
+          <div class="flex items-center justify-between mb-6">
+            <span class="rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1 text-xs font-semibold text-teal-300">
+              04 • Autopilot
+            </span>
+            <span class="text-xs font-mono text-[#86868b]">Custom Receipts</span>
+          </div>
+          <h4 class="text-xl font-extrabold tracking-tight text-white mb-2">
+            Pure receipts. Zero fluff.
+          </h4>
+          <p class="text-xs text-[#86868b] leading-relaxed mb-6">
+            Matches real portfolio deliverables to the job's stack requirements with 1-click Upwork cover letter injection.
+          </p>
+        </div>
+
+        <div class="rounded-2xl border border-white/10 bg-black/50 p-3.5 font-mono text-[11px] text-[#f5f5f7]/90 leading-relaxed">
+          <span class="text-teal-300 font-bold">Hi Sarah —</span> deployed a similar Next.js app cutting TTFB by 42%. Ready immediately.
+        </div>
+      </div>
+
+      <!-- Bento 5: Agency Collision Radar (1 column) -->
+      <div class="apple-glass-card rounded-[28px] p-8 flex flex-col justify-between group">
+        <div>
+          <div class="flex items-center justify-between mb-6">
+            <span class="rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-300">
+              05 • Agency Sync
+            </span>
+            <span class="text-xs font-mono text-[#86868b]">Live Radar</span>
+          </div>
+          <h4 class="text-xl font-extrabold tracking-tight text-white mb-2">
+            Team Collision Locks.
+          </h4>
+          <p class="text-xs text-[#86868b] leading-relaxed mb-6">
+            Stops multiple team members from bidding against each other on the same listing.
+          </p>
+        </div>
+
+        <div class="rounded-2xl border border-purple-500/25 bg-purple-500/10 p-4 flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-white">Alex D. is already bidding</div>
+            <div class="text-[10px] text-[#86868b]">14m ago with 16 Connects</div>
+          </div>
+          <span class="rounded-full bg-brand-500/20 text-brand-300 text-[10px] font-bold px-2 py-0.5 border border-brand-500/30">
+            Blocked ✓
+          </span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Interactive macOS-Style Connects Burn Calculator -->
+  <section id="calculator" class="py-24 px-6 bg-gradient-to-b from-black via-[#0c0d10] to-black border-y border-white/[0.08] relative">
     <div class="max-w-4xl mx-auto">
       <div class="text-center mb-12">
-        <h2 class="text-xs font-bold uppercase tracking-widest text-brand-400 mb-2">Connects Burn Calculator</h2>
-        <h3 class="text-3xl sm:text-4xl font-black text-white">How much capital are you burning on ghost jobs?</h3>
-        <p class="text-sm text-slate-400 mt-2">Freelancers lose up to 45% of their Connects to clients with sub-20% hire rates.</p>
+        <div class="text-xs font-semibold uppercase tracking-widest text-brand-400 mb-2">Capital Telemetry</div>
+        <h3 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">How much capital are you burning on ghost jobs?</h3>
+        <p class="text-sm text-[#86868b] mt-2 font-normal">Freelancers lose up to 45% of their Connects budget to clients with sub-20% hire rates.</p>
       </div>
 
-      <div class="rounded-3xl border border-edge bg-raised/70 p-8 shadow-2xl backdrop-blur-xl">
+      <!-- macOS System Preference Card -->
+      <div class="apple-glass-card rounded-[32px] p-8 sm:p-10 shadow-2xl">
         <div class="grid sm:grid-cols-2 gap-8 mb-8">
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-2">Proposals Sent Per Month: <span id="calc-proposals-val" class="text-brand-400">40</span></label>
-            <input id="calc-proposals" type="range" min="10" max="150" value="40" class="w-full accent-brand-500 cursor-pointer">
+            <label class="block text-xs font-semibold text-white/90 mb-3 flex justify-between">
+              <span>Proposals Sent Per Month</span>
+              <span id="calc-proposals-val" class="font-mono text-brand-400 font-bold text-sm">40</span>
+            </label>
+            <input id="calc-proposals" type="range" min="10" max="150" value="40" class="w-full accent-brand-500 cursor-pointer h-1.5 bg-white/10 rounded-lg">
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-2">Average Connects Per Bid: <span id="calc-connects-val" class="text-brand-400">14</span></label>
-            <input id="calc-connects" type="range" min="6" max="30" value="14" class="w-full accent-brand-500 cursor-pointer">
+            <label class="block text-xs font-semibold text-white/90 mb-3 flex justify-between">
+              <span>Average Connects Per Bid</span>
+              <span id="calc-connects-val" class="font-mono text-brand-400 font-bold text-sm">14</span>
+            </label>
+            <input id="calc-connects" type="range" min="6" max="30" value="14" class="w-full accent-brand-500 cursor-pointer h-1.5 bg-white/10 rounded-lg">
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-edge">
-          <div class="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 text-center">
-            <div class="text-[11px] font-bold text-rose-300 uppercase">Wasted Connects / Mo</div>
-            <div id="res-wasted-connects" class="text-3xl font-black text-rose-400 mt-1">224</div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-white/10">
+          <div class="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-5 text-center">
+            <div class="text-[11px] font-semibold text-rose-300 uppercase tracking-wider">Wasted Connects / Mo</div>
+            <div id="res-wasted-connects" class="text-3xl font-extrabold text-rose-400 mt-1 font-mono">224</div>
           </div>
-          <div class="rounded-xl border border-brand-500/20 bg-brand-500/10 p-4 text-center">
-            <div class="text-[11px] font-bold text-brand-300 uppercase">Cash Burn Protected</div>
-            <div id="res-cash-saved" class="text-3xl font-black text-brand-400 mt-1">$33.60</div>
+          <div class="rounded-2xl border border-brand-500/25 bg-brand-500/10 p-5 text-center">
+            <div class="text-[11px] font-semibold text-brand-300 uppercase tracking-wider">Cash Burn Protected</div>
+            <div id="res-cash-saved" class="text-3xl font-extrabold text-brand-400 mt-1 font-mono">$33.60</div>
           </div>
-          <div class="rounded-xl border border-indigo-500/20 bg-indigo-500/10 p-4 text-center">
-            <div class="text-[11px] font-bold text-indigo-300 uppercase">Extra Closed Value</div>
-            <div id="res-revenue-gained" class="text-3xl font-black text-indigo-400 mt-1">+$1,450</div>
+          <div class="rounded-2xl border border-indigo-500/20 bg-indigo-500/10 p-5 text-center">
+            <div class="text-[11px] font-semibold text-indigo-300 uppercase tracking-wider">Extra Closed Value</div>
+            <div id="res-revenue-gained" class="text-3xl font-extrabold text-indigo-400 mt-1 font-mono">+$1,450</div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 4 Core Pillars -->
-  <section id="features" class="py-24 px-6 max-w-7xl mx-auto">
+  <!-- Apple-Style Pricing Table -->
+  <section id="pricing" class="py-24 px-6 max-w-6xl mx-auto">
     <div class="text-center mb-16">
-      <h2 class="text-xs font-bold uppercase tracking-widest text-brand-400 mb-2">Complete System Overview</h2>
-      <h3 class="text-3xl sm:text-5xl font-black text-white">4 Pillars of Modern Upwork Dominance</h3>
+      <div class="text-xs font-semibold uppercase tracking-widest text-brand-400 mb-2">Transparent Plans</div>
+      <h3 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">Simple, predictable pricing.</h3>
+      <p class="text-sm text-[#86868b] max-w-md mx-auto mt-2">Zero lock-in. Powered by deterministic client-side execution.</p>
     </div>
 
-    <div class="grid md:grid-cols-2 gap-8">
-      <!-- Pillar 1 -->
-      <div class="rounded-3xl border border-edge bg-panel/90 p-8 hover:border-brand-500/40 transition-all group">
-        <div class="h-12 w-12 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400 text-xl font-black mb-6">
-          01
+    <div class="grid md:grid-cols-3 gap-8 items-stretch">
+      <!-- Free Starter -->
+      <div class="apple-glass-card rounded-[28px] p-8 flex flex-col justify-between">
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-wider text-[#86868b] mb-1">Starter</div>
+          <div class="text-3xl font-extrabold text-white mb-3">Free Forever</div>
+          <p class="text-xs text-[#86868b] mb-6">Essential client intent scoring and scam protection.</p>
+          <ul class="space-y-3 text-xs text-white/80">
+            <li class="flex items-center gap-2">✓ 0–100 Real-Time Client Intent Scores</li>
+            <li class="flex items-center gap-2">✓ Ghost Job & Off-Platform Scam Radar</li>
+            <li class="flex items-center gap-2">✓ Connects Saved Tally Counter</li>
+            <li class="flex items-center gap-2">✓ Historical True Rate Benchmark</li>
+            <li class="flex items-center gap-2">✓ 8 Interface Languages</li>
+          </ul>
         </div>
-        <h4 class="text-xl font-black text-white mb-3">Client Intent Scoring & Ghost Job Radar</h4>
-        <p class="text-sm text-slate-400 leading-relaxed mb-6">
-          Real-time 0–100 tactical score stamped beneath every job listing on Upwork. Instantly reveals true median pay rates, lifetime spend, and red flags (Telegram scams, 0% hire rate ghost jobs).
-        </p>
-        <ul class="space-y-2.5 text-xs text-slate-300">
-          <li class="flex items-center gap-2">✓ High / Medium / Low Tactical Intent Badges</li>
-          <li class="flex items-center gap-2">✓ True Rate Benchmark vs. Inflated Budgets</li>
-          <li class="flex items-center gap-2">✓ Real Client Name Extraction from Feedback History</li>
-        </ul>
+        <a href="./gigradar-0.3.3.zip" download class="mt-8 block w-full text-center rounded-full border border-white/20 bg-white/5 py-3 text-xs font-semibold text-white hover:bg-white/10 transition-all">
+          Download Free Extension
+        </a>
       </div>
 
-      <!-- Pillar 2 -->
-      <div class="rounded-3xl border border-edge bg-panel/90 p-8 hover:border-indigo-500/40 transition-all group">
-        <div class="h-12 w-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-xl font-black mb-6">
-          02
+      <!-- Pro Freelancer (Most Popular) -->
+      <div class="apple-glass-card rounded-[28px] p-8 flex flex-col justify-between relative border-brand-500/50 shadow-[0_0_50px_rgba(16,185,129,0.15)]">
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-brand-400 to-brand-500 px-4 py-0.5 text-[10px] font-bold text-black uppercase tracking-wider">
+          Most Popular
         </div>
-        <h4 class="text-xl font-black text-white mb-3">High-Precision Proposal Autopilot</h4>
-        <p class="text-sm text-slate-400 leading-relaxed mb-6">
-          Automatically matches your portfolio case studies and verifiable receipts to live job requirements. Generates custom 4-part winning proposals with zero AI clichés or fluff.
-        </p>
-        <ul class="space-y-2.5 text-xs text-slate-300">
-          <li class="flex items-center gap-2">✓ Automated Portfolio Matching Algorithm</li>
-          <li class="flex items-center gap-2">✓ Zero-AI-Fluff Filter (Banned phrase scrubber)</li>
-          <li class="flex items-center gap-2">✓ 1-Click Autofill into Upwork's Cover Letter Textarea</li>
-        </ul>
-      </div>
-
-      <!-- Pillar 3 -->
-      <div class="rounded-3xl border border-edge bg-panel/90 p-8 hover:border-sky-500/40 transition-all group">
-        <div class="h-12 w-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 text-xl font-black mb-6">
-          03
-        </div>
-        <h4 class="text-xl font-black text-white mb-3">Predictive Bid Intelligence & ROI Forecaster</h4>
-        <p class="text-sm text-slate-400 leading-relaxed mb-6">
-          A real-time auction engine modeling Upwork's 4 boosted slots against client hire rate and proposal saturation. Calculates exact win probability curves and expected net dollar value ($EV).
-        </p>
-        <ul class="space-y-2.5 text-xs text-slate-300">
-          <li class="flex items-center gap-2">✓ 4 Strategies: Organic Sweet Spot, Tactical Boost, Aggressive, Skip</li>
-          <li class="flex items-center gap-2">✓ 1-Click Native Boost Input Injection</li>
-          <li class="flex items-center gap-2">✓ Interactive Options Sandbox Simulator</li>
-        </ul>
-      </div>
-
-      <!-- Pillar 4 -->
-      <div class="rounded-3xl border border-edge bg-panel/90 p-8 hover:border-teal-500/40 transition-all group">
-        <div class="h-12 w-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 text-xl font-black mb-6">
-          04
-        </div>
-        <h4 class="text-xl font-black text-white mb-3">Agency Lead Inbox & Real-Time Webhooks</h4>
-        <p class="text-sm text-slate-400 leading-relaxed mb-6">
-          Team collision lock prevents multiple agency business developers from bidding on the same client. Dispatches instant webhook alerts to Slack, Discord, or your custom CRM.
-        </p>
-        <ul class="space-y-2.5 text-xs text-slate-300">
-          <li class="flex items-center gap-2">✓ Real-Time Collision Warning Banners on Job Posts</li>
-          <li class="flex items-center gap-2">✓ Slack Block Kit & Discord Rich Embed Dispatching</li>
-          <li class="flex items-center gap-2">✓ 1-Click CSV & JSON Export for CRM Pipelines</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- Pricing Table -->
-  <section id="pricing" class="py-20 px-6 bg-panel/30 border-t border-edge/60">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-16">
-        <h2 class="text-xs font-bold uppercase tracking-widest text-brand-400 mb-2">Transparent Tiers</h2>
-        <h3 class="text-3xl sm:text-5xl font-black text-white">Built for Solo Pros and Scaling Agencies</h3>
-      </div>
-
-      <div class="grid md:grid-cols-3 gap-8 items-stretch">
-        <!-- Free Tier -->
-        <div class="rounded-3xl border border-edge bg-raised/50 p-8 flex flex-col justify-between">
-          <div>
-            <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Starter</div>
-            <div class="text-3xl font-black text-white mb-4">Free Forever</div>
-            <p class="text-xs text-slate-400 mb-6">Essential client verification and scam protection.</p>
-            <ul class="space-y-3 text-xs text-slate-300">
-              <li>✓ 0–100 Real-Time Client Intent Scores</li>
-              <li>✓ Ghost Job & Off-Platform Scam Radar</li>
-              <li>✓ Connects Saved Counter</li>
-              <li>✓ True Rate Benchmark</li>
-              <li>✓ 8 Interface Languages</li>
-            </ul>
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-wider text-brand-300 mb-1">Pro Freelancer</div>
+          <div class="flex items-baseline gap-2 mb-3">
+            <span class="text-4xl font-extrabold text-white font-mono">$29</span>
+            <span class="text-xs text-[#86868b]">/ mo (or $19.99 Early Bird)</span>
           </div>
-          <a href="./gigradar-0.3.3.zip" download class="mt-8 block w-full text-center rounded-xl border border-edge bg-obsidian py-3 text-xs font-bold text-white hover:border-brand-500/40 transition-all">
-            Download Free Extension
-          </a>
+          <p class="text-xs text-[#86868b] mb-6">For serious freelancers closing $5,000–$20,000/mo.</p>
+          <ul class="space-y-3 text-xs text-white/90">
+            <li class="flex items-center gap-2">✓ <b>Everything in Free</b></li>
+            <li class="flex items-center gap-2">✓ <b>Proposal Autopilot & Custom Voice Profiles</b></li>
+            <li class="flex items-center gap-2">✓ <b>Portfolio Case Study Matcher</b></li>
+            <li class="flex items-center gap-2">✓ <b>Predictive Bid Intelligence & ROI Curve</b></li>
+            <li class="flex items-center gap-2">✓ <b>1-Click Cover Letter & Boost Autofill</b></li>
+            <li class="flex items-center gap-2">✓ <b>Client First Name Extraction</b></li>
+          </ul>
         </div>
+        <a href="./gigradar-0.3.3.zip" download class="mt-8 block w-full text-center rounded-full bg-gradient-to-r from-brand-400 to-brand-500 py-3 text-xs font-bold text-slate-950 shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:scale-[1.02] transition-all">
+          Install Pro v0.3.3
+        </a>
+      </div>
 
-        <!-- Pro Tier -->
-        <div class="rounded-3xl border-2 border-brand-500/60 bg-gradient-to-b from-brand-500/10 to-transparent p-8 flex flex-col justify-between relative shadow-[0_0_40px_rgba(16,185,129,0.15)]">
-          <div class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-brand-400 to-brand-500 px-3.5 py-0.5 text-[10px] font-black text-slate-950 uppercase tracking-widest">
-            Most Popular
+      <!-- Agency Scale -->
+      <div class="apple-glass-card rounded-[28px] p-8 flex flex-col justify-between">
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-wider text-indigo-300 mb-1">Agency Scale</div>
+          <div class="flex items-baseline gap-2 mb-3">
+            <span class="text-4xl font-extrabold text-white font-mono">$199</span>
+            <span class="text-xs text-[#86868b]">/ mo (Up to 10 Seats)</span>
           </div>
-          <div>
-            <div class="text-xs font-bold uppercase tracking-wider text-brand-300 mb-1">Pro Freelancer</div>
-            <div class="flex items-baseline gap-2 mb-4">
-              <span class="text-4xl font-black text-white">$29</span>
-              <span class="text-xs text-slate-400">/ month (or $19.99 Early Bird)</span>
-            </div>
-            <p class="text-xs text-slate-400 mb-6">For serious freelancers closing $5k–$20k/mo.</p>
-            <ul class="space-y-3 text-xs text-slate-200">
-              <li>✓ Everything in Free</li>
-              <li>✓ <b>Proposal Autopilot & Custom Voice Profiles</b></li>
-              <li>✓ <b>Portfolio Case Study Matcher</b></li>
-              <li>✓ <b>Predictive Bid Intelligence & ROI Curve</b></li>
-              <li>✓ <b>1-Click Upwork Cover Letter & Boost Autofill</b></li>
-              <li>✓ <b>Real Client Name Extraction</b></li>
-            </ul>
-          </div>
-          <a href="./gigradar-0.3.3.zip" download class="mt-8 block w-full text-center rounded-xl bg-gradient-to-r from-brand-400 to-brand-500 py-3 text-xs font-black text-slate-950 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:scale-[1.02] transition-all">
-            Install Pro v0.3.3
-          </a>
+          <p class="text-xs text-[#86868b] mb-6">For agencies and BD teams that bid aggressively.</p>
+          <ul class="space-y-3 text-xs text-white/80">
+            <li class="flex items-center gap-2">✓ <b>Everything in Pro Freelancer</b></li>
+            <li class="flex items-center gap-2">✓ <b>Real-time Team Claim & Collision Blocking</b></li>
+            <li class="flex items-center gap-2">✓ <b>Agency Lead Inbox & Pipeline Dashboard</b></li>
+            <li class="flex items-center gap-2">✓ <b>Real-Time Webhooks (Slack Block Kit & Discord)</b></li>
+            <li class="flex items-center gap-2">✓ <b>1-Click CSV / CRM Deal Pipeline Export</b></li>
+          </ul>
         </div>
-
-        <!-- Agency Tier -->
-        <div class="rounded-3xl border border-indigo-500/30 bg-indigo-500/5 p-8 flex flex-col justify-between">
-          <div>
-            <div class="text-xs font-bold uppercase tracking-wider text-indigo-300 mb-1">Agency Scale</div>
-            <div class="flex items-baseline gap-2 mb-4">
-              <span class="text-4xl font-black text-white">$199</span>
-              <span class="text-xs text-slate-400">/ month</span>
-            </div>
-            <p class="text-xs text-slate-400 mb-6">For multi-seat agencies spending $1,000s on Connects.</p>
-            <ul class="space-y-3 text-xs text-slate-300">
-              <li>✓ Everything in Pro Freelancer</li>
-              <li>✓ <b>Team Collision Prevention Locks</b></li>
-            <p class="text-xs text-slate-400 mb-6">For agencies and BD teams that bid aggressively and cannot afford collisions.</p>
-
-            <ul class="space-y-3 text-xs text-slate-300">
-              <li class="flex items-center gap-2">✓ Everything in Pro (Up to 10 Seats)</li>
-              <li class="flex items-center gap-2">✓ Real-time Team Claim & Collision Blocking</li>
-              <li class="flex items-center gap-2">✓ Agency Lead Inbox & Pipeline Dashboard</li>
-              <li class="flex items-center gap-2">✓ Real-Time Webhooks (Slack Block Kit & Discord)</li>
-              <li class="flex items-center gap-2">✓ 1-Click CSV / CRM Deal Pipeline Export</li>
-            </ul>
-          </div>
-
-          <a href="./gigradar-0.3.3.zip" download class="mt-8 block w-full text-center rounded-xl border border-indigo-500/40 bg-indigo-500/20 py-3 text-xs font-bold text-indigo-300 hover:bg-indigo-500/30 transition-all">
-            Deploy for Agency
-          </a>
-        </div>
+        <a href="./gigradar-0.3.3.zip" download class="mt-8 block w-full text-center rounded-full border border-indigo-500/40 bg-indigo-500/15 py-3 text-xs font-semibold text-indigo-300 hover:bg-indigo-500/25 transition-all">
+          Deploy for Agency
+        </a>
       </div>
     </div>
   </section>
 
-  <!-- How to Install (Chrome Web Store & Developer Mode) -->
-  <section id="install" class="py-20 px-6 max-w-5xl mx-auto">
+  <!-- macOS "Setup Assistant" 3-Step Install -->
+  <section id="install" class="py-24 px-6 max-w-5xl mx-auto">
     <div class="text-center mb-12">
-      <h2 class="text-3xl font-black text-white">How to Install in 2 Minutes</h2>
-      <p class="text-slate-400 text-sm mt-2">Load GigRadar in Google Chrome or Brave in 3 simple steps.</p>
+      <div class="text-xs font-semibold uppercase tracking-widest text-brand-400 mb-2">Fast Onboarding</div>
+      <h2 class="text-3xl font-extrabold tracking-tight text-white">Ready in 2 minutes.</h2>
+      <p class="text-[#86868b] text-sm mt-1">Load GigRadar into Google Chrome, Brave, or Edge in 3 simple steps.</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="rounded-2xl border border-edge bg-panel p-6 shadow-card">
-        <div class="text-brand-400 font-mono font-black text-2xl mb-2">01</div>
-        <h3 class="text-base font-bold text-white mb-2">Download & Unzip</h3>
-        <p class="text-xs text-slate-400 leading-relaxed">
-          Download <a href="./gigradar-0.3.3.zip" class="text-brand-400 underline">gigradar-0.3.3.zip</a> and extract the folder to your computer.
+      <div class="apple-glass-card rounded-2xl p-6">
+        <div class="text-brand-400 font-mono font-bold text-xl mb-2">01</div>
+        <h3 class="text-sm font-bold text-white mb-2">Download & Unzip</h3>
+        <p class="text-xs text-[#86868b] leading-relaxed">
+          Download <a href="./gigradar-0.3.3.zip" class="text-brand-400 underline font-semibold">gigradar-0.3.3.zip</a> and extract the folder to your computer.
         </p>
       </div>
 
-      <div class="rounded-2xl border border-edge bg-panel/90 p-6">
-        <div class="text-brand-400 font-mono text-xs font-bold mb-2">STEP 02</div>
-        <h4 class="font-bold text-white mb-1">Enable Dev Mode</h4>
-        <p class="text-xs text-slate-400 leading-relaxed">
-          Open Chrome/Brave/Edge and navigate to <code class="text-[11px] bg-obsidian px-1.5 py-0.5 rounded text-slate-300">chrome://extensions</code>. Toggle <b>Developer mode</b> ON.
+      <div class="apple-glass-card rounded-2xl p-6">
+        <div class="text-brand-400 font-mono font-bold text-xl mb-2">02</div>
+        <h4 class="text-sm font-bold text-white mb-2">Enable Developer Mode</h4>
+        <p class="text-xs text-[#86868b] leading-relaxed">
+          Open browser and go to <code class="text-[11px] bg-white/10 px-1.5 py-0.5 rounded text-white font-mono">chrome://extensions</code>. Toggle <b>Developer mode</b> ON.
         </p>
       </div>
 
-      <div class="rounded-2xl border border-edge bg-panel/90 p-6">
-        <div class="text-brand-400 font-mono text-xs font-bold mb-2">STEP 03</div>
-        <h4 class="font-bold text-white mb-1">Load Unpacked</h4>
-        <p class="text-xs text-slate-400 leading-relaxed">
-          Click <b>Load unpacked</b> and select the extracted folder. GigRadar is active immediately!
+      <div class="apple-glass-card rounded-2xl p-6">
+        <div class="text-brand-400 font-mono font-bold text-xl mb-2">03</div>
+        <h4 class="text-sm font-bold text-white mb-2">Load Unpacked</h4>
+        <p class="text-xs text-[#86868b] leading-relaxed">
+          Click <b>Load unpacked</b> and select the extracted folder. GigRadar activates immediately on Upwork!
         </p>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="border-t border-edge/60 py-10 px-6 text-center text-xs text-slate-500">
-    <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-2">
-        <span class="font-bold text-slate-300">GigRadar v0.3.3</span>
-        <span>• Deterministic Client-Side Intelligence</span>
+  <!-- Apple-Style Minimalist Global Footer -->
+  <footer class="border-t border-white/[0.08] py-12 px-6 text-xs text-[#86868b]">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <span class="font-semibold text-white">GigRadar</span>
+        <span>•</span>
+        <span>v0.3.3 Live</span>
+        <span>•</span>
+        <span>Deterministic Client-Side Intelligence</span>
       </div>
       <div>
-        Disclaimer: GigRadar is an independent tool and is not affiliated with, endorsed by, or sponsored by Upwork Global Inc.
+        Disclaimer: GigRadar is an independent utility and is not affiliated with, endorsed by, or sponsored by Upwork Global Inc.
       </div>
     </div>
   </footer>
