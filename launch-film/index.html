@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GigRadar — Apple Mac Launch Film</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "SF Mono", Menlo, Monaco, "Courier New", monospace;
+    }
+
+    body {
+      background: #000000;
+      color: #ffffff;
+      font-family: var(--font-display);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* 1920x1080 Stage Viewport */
+    #viewport-container {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      transform-origin: center center;
+      overflow: hidden;
+      background: #000000;
+      box-shadow: 0 30px 100px rgba(0,0,0,0.8);
+    }
+
+    /* Canvas / Wallpaper Background */
+    #wallpaper {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      transition: background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1;
+    }
+
+    .ambient-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      opacity: 0.7;
+      transition: all 0.8s ease-out;
+    }
+
+    /* macOS Menu Bar */
+    #menu-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 32px;
+      background: rgba(18, 20, 24, 0.55);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      color: rgba(255, 255, 255, 0.92);
+      z-index: 50;
+    }
+
+    .menu-left {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .menu-apple-logo {
+      font-size: 14px;
+      line-height: 1;
+      opacity: 0.95;
+    }
+
+    .menu-app-name {
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .menu-item {
+      opacity: 0.85;
+      font-weight: 450;
+    }
+
+    .menu-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 12.5px;
+    }
+
+    .menu-icon {
+      display: inline-flex;
+      align-items: center;
+      opacity: 0.88;
+    }
+
+    /* The MacBook Notch at the top centre */
+    #notch-wrapper {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    #notch {
+      position: relative;
+      background: #000000;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      transform-origin: top center;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    /* Camera aperture pinhole & status indicator */
+    #notch-camera {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #1c2333 0%, #080a10 70%, #000000 100%);
+      box-shadow: inset 0 0 2px rgba(0,0,0,0.8), 0 0 1px rgba(255,255,255,0.2);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #notch-camera-dot {
+      width: 3.5px;
+      height: 3.5px;
+      border-radius: 50%;
+      background: #10b981;
+      opacity: 0.75;
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.8);
+      transition: opacity 0.3s ease;
+    }
+
+    /* Notch Widget View Container */
+    #notch-content {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 14px;
+    }
+
+    /* Scene Captions (below notch) */
+    #caption-container {
+      position: absolute;
+      top: 560px;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+      text-align: center;
+      pointer-events: none;
+      padding: 0 80px;
+    }
+
+    #caption-eyebrow {
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      margin-bottom: 14px;
+      opacity: 0.75;
+      transition: all 0.4s ease;
+    }
+
+    #caption-text {
+      font-size: 46px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.18;
+      max-width: 1200px;
+      color: #ffffff;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+      transition: all 0.4s ease;
+    }
+
+    #caption-text .tint {
+      font-weight: 800;
+      transition: color 0.4s ease;
+    }
+
+    /* Widgets Inside Notch */
+    .widget-pane {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 28px 12px 28px;
+      opacity: 0;
+      transform: scale(0.92);
+      transition: none;
+    }
+
+    /* Scene 1: Hello */
+    #widget-hello {
+      flex-direction: column;
+      justify-content: center;
+      padding-top: 18px;
+    }
+
+    .hello-path {
+      stroke-dasharray: 800;
+      stroke-dashoffset: 800;
+      fill: none;
+      stroke: #ffffff;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.7));
+    }
+
+    /* Scene 2: Intent Score */
+    .intent-grid {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      align-items: center;
+      gap: 24px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .gauge-box {
+      position: relative;
+      width: 130px;
+      height: 130px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gauge-svg {
+      transform: rotate(-90deg);
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .gauge-bg {
+      fill: none;
+      stroke: rgba(255,255,255,0.08);
+      stroke-width: 10;
+    }
+
+    .gauge-bar {
+      fill: none;
+      stroke: url(#emerald-gradient);
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-dasharray: 345;
+      stroke-dashoffset: 345;
+      filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.6));
+    }
+
+    .gauge-score {
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: #34d399;
+      text-shadow: 0 0 25px rgba(52, 211, 153, 0.4);
+    }
+
+    .gauge-label {
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+      margin-top: 4px;
+    }
+
+    .intent-details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .intent-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .intent-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(16, 185, 129, 0.18);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #34d399;
+    }
+
+    .intent-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .stat-pill {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 6px 10px;
+    }
+
+    .stat-title {
+      font-size: 9.5px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-val {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 2px;
+    }
+
+    /* Scene 3: Client Name & True Pay */
+    .dossier-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      width: 100%;
+      height: 100%;
+      align-items: center;
+    }
+
+    .dossier-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .client-avatar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar-bubble {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 800;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    }
+
+    .client-name-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+
+    .client-sub {
+      font-size: 11.5px;
+      color: rgba(255,255,255,0.55);
+    }
+
+    .pay-metric-val {
+      font-size: 26px;
+      font-weight: 800;
+      color: #818cf8;
+      letter-spacing: -0.03em;
+    }
+
+    .pay-metric-compare {
+      font-size: 11px;
+      color: rgba(255,255,255,0.45);
+    }
+
+    /* Scene 4: Waste Shield */
+    .shield-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 14px;
+      width: 100%;
+      height: 100%;
+      align-items: center;
+    }
+
+    .shield-alert-card {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.28);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .alert-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #f87171;
+    }
+
+    .alert-desc {
+      font-size: 11px;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.3;
+    }
+
+    .shield-save-card {
+      background: rgba(16, 185, 129, 0.09);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .save-number {
+      font-size: 26px;
+      font-weight: 800;
+      color: #34d399;
+      letter-spacing: -0.02em;
+    }
+
+    .save-caption {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.7);
+    }
+
+    /* Scene 5: Proposal Autofill */
+    .autofill-layout {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .tab-pills-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.6);
+    }
+
+    .tab-pill.active {
+      background: rgba(45, 212, 191, 0.2);
+      border-color: rgba(45, 212, 191, 0.5);
+      color: #2dd4bf;
+    }
+
+    .proposal-box {
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #e2e8f0;
+      font-family: var(--font-display);
+    }
+
+    .highlight-name {
+      color: #2dd4bf;
+      font-weight: 700;
+    }
+
+    .highlight-receipt {
+      color: #a5f3fc;
+      background: rgba(6, 182, 212, 0.15);
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+
+    /* Scene 6: Agency Team Sync */
+    .agency-layout {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .agency-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: rgba(255,255,255,0.65);
+    }
+
+    .radar-pulse {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #c084fc;
+      font-weight: 700;
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #c084fc;
+      box-shadow: 0 0 8px #c084fc;
+    }
+
+    .conflict-banner {
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .conflict-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .team-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #7c3aed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .conflict-text-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .conflict-text-sub {
+      font-size: 11px;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .conflict-badge {
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    /* Scene 7: Hero Finale Center Stage */
+    #hero-finale {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 60;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .hero-icon-squircle {
+      width: 120px;
+      height: 120px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.08) 100%);
+      border: 1px solid rgba(52, 211, 153, 0.45);
+      box-shadow: 0 20px 60px rgba(16, 185, 129, 0.35), inset 0 1px 1px rgba(255,255,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .hero-icon-svg {
+      width: 60px;
+      height: 60px;
+      color: #34d399;
+      filter: drop-shadow(0 0 16px rgba(52, 211, 153, 0.8));
+    }
+
+    .hero-title {
+      font-size: 76px;
+      font-weight: 850;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      color: #ffffff;
+      margin-bottom: 12px;
+      text-shadow: 0 4px 30px rgba(0,0,0,0.7);
+    }
+
+    .hero-subtitle {
+      font-size: 24px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: rgba(255, 255, 255, 0.65);
+      margin-bottom: 28px;
+    }
+
+    .hero-pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(52, 211, 153, 0.45);
+      padding: 8px 24px;
+      border-radius: 999px;
+      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.25);
+    }
+
+    .hero-pill-tag {
+      font-size: 13px;
+      font-weight: 800;
+      color: #34d399;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero-pill-domain {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    /* Player Controller (HUD for testing and scrubbing) */
+    #player-hud {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18, 22, 28, 0.88);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 18px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      z-index: 1000;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.7);
+      font-family: var(--font-display);
+    }
+
+    .hud-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #ffffff;
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .hud-btn:hover {
+      background: rgba(255,255,255,0.18);
+    }
+
+    .hud-slider {
+      width: 240px;
+      accent-color: #10b981;
+      cursor: pointer;
+    }
+
+    .hud-time {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: rgba(255,255,255,0.8);
+      min-width: 130px;
+    }
+
+    .hud-scene-pills {
+      display: flex;
+      gap: 5px;
+    }
+
+    .hud-scene-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.7);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .hud-scene-btn.active {
+      background: rgba(16, 185, 129, 0.3);
+      border-color: #34d399;
+      color: #ffffff;
+    }
+
+    /* Hide HUD in headless / render mode */
+    body.render-mode #player-hud {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1920x1080 Stage -->
+  <div id="viewport-container">
+
+    <!-- Wallpaper Canvas Layer -->
+    <div id="wallpaper"></div>
+    <div id="orb-1" class="ambient-orb" style="width: 700px; height: 700px; top: -100px; left: 10%;"></div>
+    <div id="orb-2" class="ambient-orb" style="width: 600px; height: 600px; bottom: -50px; right: 15%;"></div>
+
+    <!-- macOS Menu Bar -->
+    <div id="menu-bar">
+      <div class="menu-left">
+        <svg class="menu-apple-logo" width="13" height="16" viewBox="0 0 170 170" fill="currentColor" style="opacity: 0.95; margin-right: 2px;">
+          <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.67-7.81-11.96-14.34-6.85-10.45-12.01-22.18-15.48-35.18-3.48-13-5.22-25.12-5.22-36.37 0-14.79 3.65-27.18 10.96-37.16 7.3-9.99 16.55-15.08 27.73-15.29 4.35 0 9.4 1.15 15.15 3.44 5.76 2.3 9.49 3.49 11.2 3.58 1.48-.1 5.34-1.34 11.59-3.73 6.25-2.39 11.45-3.45 15.61-3.18 12.07.76 21.6 5.25 28.58 13.48-10.45 6.31-15.56 15.15-15.34 26.54.22 9.13 3.73 16.85 10.53 23.16 6.8 6.31 15.02 9.87 24.66 10.68-2.18 6.96-4.99 14.12-8.43 21.49zm-33.15-114.7c0-7.39 2.66-14.11 7.97-20.17 5.32-6.06 11.89-9.77 19.72-11.13.22 1.09.33 2.18.33 3.26 0 7.28-2.82 14.23-8.47 20.85-5.65 6.63-12.38 10.42-20.19 11.39-.22-1.41-.36-2.81-.36-4.2z"/>
+        </svg>
+        <span class="menu-app-name">GigRadar</span>
+        <span class="menu-item">File</span>
+        <span class="menu-item">Edit</span>
+        <span class="menu-item">View</span>
+        <span class="menu-item">Window</span>
+        <span class="menu-item">Help</span>
+      </div>
+      <div class="menu-right">
+        <span class="menu-icon">
+          <!-- Wi-Fi SVG -->
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+            <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+            <line x1="12" y1="20" x2="12.01" y2="20"></line>
+          </svg>
+        </span>
+        <span class="menu-icon">
+          <!-- Battery SVG -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect>
+            <line x1="22" y1="11" x2="22" y2="13"></line>
+            <rect x="4" y="9" width="10" height="6" fill="currentColor"></rect>
+          </svg>
+        </span>
+        <span class="menu-icon">
+          <!-- Spotlight SVG -->
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <span class="menu-icon">
+          <!-- Control Center SVG -->
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+        </span>
+        <span id="menu-clock" style="font-weight: 550;">Sat Oct 10  9:41 AM</span>
+      </div>
+    </div>
+
+    <!-- The MacBook Notch -->
+    <div id="notch-wrapper">
+      <div id="notch" style="width: 168px; height: 32px; border-radius: 0 0 14px 14px;">
+        <div id="notch-camera">
+          <div id="notch-camera-dot"></div>
+        </div>
+        
+        <div id="notch-content">
+
+          <!-- Scene 1: Hello Widget -->
+          <div id="widget-hello" class="widget-pane">
+            <svg width="220" height="65" viewBox="0 0 190 65" style="overflow: visible;">
+              <!-- Authentic Apple Cursive 'hello' -->
+              <path class="hello-path" d="M 18,36 C 21,22 30,6 38,6 C 43,6 44,10 42,22 L 35,52 C 39,42 48,32 56,32 C 64,32 66,38 64,46 L 62,52 C 64,44 70,34 78,34 C 86,34 88,40 84,48 C 80,54 72,54 70,54 C 64,54 64,48 68,42 C 72,36 80,36 84,42 C 88,48 92,52 98,52 C 102,52 104,48 106,38 L 112,12 C 115,5 120,5 123,8 C 124,12 122,22 116,46 L 114,52 C 116,46 120,22 126,12 C 129,5 134,5 137,8 C 138,12 136,22 130,46 L 128,52 C 132,44 140,34 150,34 C 160,34 165,42 163,50 C 161,58 152,60 146,58 C 140,56 138,48 144,40 C 150,32 160,34 164,42 C 167,48 174,45 182,40" />
+            </svg>
+          </div>
+
+          <!-- Scene 2: Client Intent Score Widget -->
+          <div id="widget-intent" class="widget-pane">
+            <div class="intent-grid">
+              <div class="gauge-box">
+                <svg class="gauge-svg" viewBox="0 0 120 120">
+                  <defs>
+                    <linearGradient id="emerald-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#34d399" />
+                      <stop offset="100%" stop-color="#10b981" />
+                    </linearGradient>
+                  </defs>
+                  <circle class="gauge-bg" cx="60" cy="60" r="50" />
+                  <circle id="intent-gauge-circle" class="gauge-bar" cx="60" cy="60" r="50" />
+                </svg>
+                <div id="intent-gauge-number" class="gauge-score">94</div>
+                <div class="gauge-label">Intent Score</div>
+              </div>
+              <div class="intent-details">
+                <div class="intent-header">
+                  <span>Client Intent Telemetry</span>
+                  <span class="intent-badge">✓ High Hire Probability</span>
+                </div>
+                <div class="intent-stats">
+                  <div class="stat-pill">
+                    <div class="stat-title">Hire Rate</div>
+                    <div class="stat-val" style="color: #34d399;">89%</div>
+                  </div>
+                  <div class="stat-pill">
+                    <div class="stat-title">Verified Spend</div>
+                    <div class="stat-val">$48.2K</div>
+                  </div>
+                  <div class="stat-pill">
+                    <div class="stat-title">Feedback</div>
+                    <div class="stat-val" style="color: #fbbf24;">4.98 ★</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 3: Client Name & True Pay Widget -->
+          <div id="widget-dossier" class="widget-pane">
+            <div class="dossier-layout">
+              <div class="dossier-card">
+                <div class="client-avatar-row">
+                  <div class="avatar-bubble">SM</div>
+                  <div>
+                    <div class="client-name-title">Sarah Mitchell</div>
+                    <div class="client-sub">Verified Client Name • 98% Match</div>
+                  </div>
+                </div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.7); font-style: italic; margin-top: 4px;">
+                  "Sarah is super responsive and clear with milestones."
+                </div>
+              </div>
+              <div class="dossier-card">
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.5);">True Rate Benchmark</div>
+                <div class="pay-metric-val">$42.50<span style="font-size: 14px; color: rgba(255,255,255,0.6);"> / hr</span></div>
+                <div class="pay-metric-compare">Advertised listing budget: $15.00/hr</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 4: Waste Shield Widget -->
+          <div id="widget-shield" class="widget-pane">
+            <div class="shield-layout">
+              <div class="shield-alert-card">
+                <div class="alert-header">
+                  <span>⚠️</span>
+                  <span>Connects Waste Alert</span>
+                </div>
+                <div class="alert-desc">
+                  0% Historical Hire Rate (0 of 14 jobs hired) • 50+ Proposals Saturated • Off-platform Telegram flag
+                </div>
+              </div>
+              <div class="shield-save-card">
+                <div class="save-number">+14 Connects</div>
+                <div class="save-caption">Protected ($2.10 Saved)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 5: Proposal Autofill Widget -->
+          <div id="widget-autofill" class="widget-pane">
+            <div class="autofill-layout">
+              <div class="tab-pills-row">
+                <span class="tab-pill active">Variant A: Direct & Tailored</span>
+                <span class="tab-pill">Variant B: Problem-First</span>
+                <span class="tab-pill">Variant C: Proof Receipts</span>
+              </div>
+              <div class="proposal-box">
+                Hi <span class="highlight-name">Sarah</span> — saw your requirement for migrating to React 19. I recently deployed a <span class="highlight-receipt">similar enterprise Next.js app cutting TTFB by 42%</span>. Ready to kick off immediately.
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 6: Agency Team Sync Widget -->
+          <div id="widget-agency" class="widget-pane">
+            <div class="agency-layout">
+              <div class="agency-header">
+                <span class="radar-pulse"><span class="pulse-dot"></span> Radar Team Sync Active</span>
+                <span style="font-size: 11px; color: #a78bfa;">Studio Alpha (8 Seats)</span>
+              </div>
+              <div class="conflict-banner">
+                <div class="conflict-left">
+                  <div class="team-avatar">AD</div>
+                  <div>
+                    <div class="conflict-text-title">Alex D. is already bidding on this job</div>
+                    <div class="conflict-text-sub">Proposal submitted 14m ago with 16 Connects</div>
+                  </div>
+                </div>
+                <div class="conflict-badge">Collision Blocked ✓</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Stage Captions -->
+    <div id="caption-container">
+      <div id="caption-eyebrow">GIGRADAR OS</div>
+      <div id="caption-text">
+        The Tactical Operating System for <span class="tint">Upwork.</span>
+      </div>
+    </div>
+
+    <!-- Scene 7: Hero Finale Center Stage -->
+    <div id="hero-finale">
+      <div class="hero-icon-squircle">
+        <svg class="hero-icon-svg" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+      </div>
+      <div class="hero-title">GigRadar</div>
+      <div class="hero-subtitle">The Tactical Operating System for Upwork</div>
+      <div class="hero-pill-badge">
+        <span class="hero-pill-tag">v0.3.3 Live</span>
+        <span class="hero-pill-domain">gigradar.dev</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Player HUD Controller (hidden during render) -->
+  <div id="player-hud">
+    <button id="btn-play" class="hud-btn">⏸ Pause</button>
+    <span id="hud-time-display" class="hud-time">00:00.00 / 00:20.00</span>
+    <input type="range" id="hud-scrubber" class="hud-slider" min="0" max="20" step="0.033" value="0">
+    <div class="hud-scene-pills">
+      <button class="hud-scene-btn active" data-time="0">1. Hello</button>
+      <button class="hud-scene-btn" data-time="2.8">2. Intent</button>
+      <button class="hud-scene-btn" data-time="5.6">3. Name</button>
+      <button class="hud-scene-btn" data-time="8.4">4. Shield</button>
+      <button class="hud-scene-btn" data-time="11.2">5. Autofill</button>
+      <button class="hud-scene-btn" data-time="14.0">6. Agency</button>
+      <button class="hud-scene-btn" data-time="16.8">7. Finale</button>
+    </div>
+    <button id="btn-speed" class="hud-btn">1.0x</button>
+    <button id="btn-reduced-motion" class="hud-btn">Motion: Spring</button>
+  </div>
+
+  <script>
+    // Total Duration: 20 seconds, 30fps = 600 frames
+    const TOTAL_DURATION = 20.0;
+
+    // Scenes Definition matching Apple Launch Film guidelines
+    const SCENES = [
+      {
+        id: 1,
+        start: 0.0,
+        end: 2.8,
+        eyebrow: "SAY HELLO",
+        caption: "Meet the new standard for <span class='tint'>Upwork.</span>",
+        tint: "#6ee7b7",
+        wallpaper: "radial-gradient(ellipse at 50% 20%, #0c1017 0%, #000000 70%)",
+        orb1: { bg: "rgba(16, 185, 129, 0.08)", top: "-150px", left: "20%" },
+        orb2: { bg: "rgba(99, 102, 241, 0.05)", bottom: "-100px", right: "20%" },
+        notch: { w: 320, h: 105, radius: 26 },
+        widget: "widget-hello"
+      },
+      {
+        id: 2,
+        start: 2.8,
+        end: 5.6,
+        eyebrow: "CLIENT INTENT TELEMETRY",
+        caption: "Know the client before you spend a single <span class='tint'>Connect.</span>",
+        tint: "#34d399",
+        wallpaper: "radial-gradient(ellipse at 50% 0%, #03281c 0%, #064e3b 35%, #02120b 80%)",
+        orb1: { bg: "rgba(52, 211, 153, 0.35)", top: "-80px", left: "25%" },
+        orb2: { bg: "rgba(16, 185, 129, 0.25)", bottom: "-80px", right: "20%" },
+        notch: { w: 520, h: 175, radius: 32 },
+        widget: "widget-intent"
+      },
+      {
+        id: 3,
+        start: 5.6,
+        end: 8.4,
+        eyebrow: "CLIENT DOSSIER & TRUE PAY",
+        caption: "Skip generic greetings. Say hello by <span class='tint'>name.</span>",
+        tint: "#818cf8",
+        wallpaper: "radial-gradient(ellipse at 50% 0%, #0d1238 0%, #1e1b4b 40%, #090c1f 80%)",
+        orb1: { bg: "rgba(99, 102, 241, 0.35)", top: "-80px", left: "20%" },
+        orb2: { bg: "rgba(129, 140, 248, 0.25)", bottom: "-100px", right: "25%" },
+        notch: { w: 550, h: 180, radius: 32 },
+        widget: "widget-dossier"
+      },
+      {
+        id: 4,
+        start: 8.4,
+        end: 11.2,
+        eyebrow: "CONNECTS WASTE SHIELD",
+        caption: "Stop wasting Connects on <span class='tint'>ghost jobs.</span>",
+        tint: "#fb7185",
+        wallpaper: "radial-gradient(ellipse at 50% 0%, #300d14 0%, #4c0519 40%, #15050c 80%)",
+        orb1: { bg: "rgba(244, 63, 94, 0.35)", top: "-80px", left: "30%" },
+        orb2: { bg: "rgba(251, 113, 133, 0.25)", bottom: "-80px", right: "20%" },
+        notch: { w: 530, h: 175, radius: 32 },
+        widget: "widget-shield"
+      },
+      {
+        id: 5,
+        start: 11.2,
+        end: 14.0,
+        eyebrow: "PROPOSAL AUTOFILL & HOOKS",
+        caption: "Zero AI fluff. Pitch with <span class='tint'>pure receipts.</span>",
+        tint: "#2dd4bf",
+        wallpaper: "radial-gradient(ellipse at 50% 0%, #05262e 0%, #0f766e 40%, #03181d 80%)",
+        orb1: { bg: "rgba(45, 212, 191, 0.35)", top: "-80px", left: "25%" },
+        orb2: { bg: "rgba(6, 182, 212, 0.25)", bottom: "-100px", right: "20%" },
+        notch: { w: 570, h: 185, radius: 32 },
+        widget: "widget-autofill"
+      },
+      {
+        id: 6,
+        start: 14.0,
+        end: 16.8,
+        eyebrow: "AGENCY BID COLLISION RADAR",
+        caption: "Coordinate bids across your entire <span class='tint'>agency team.</span>",
+        tint: "#c084fc",
+        wallpaper: "radial-gradient(ellipse at 50% 0%, #250d38 0%, #581c87 40%, #12061e 80%)",
+        orb1: { bg: "rgba(168, 85, 247, 0.35)", top: "-80px", left: "20%" },
+        orb2: { bg: "rgba(192, 132, 252, 0.25)", bottom: "-80px", right: "25%" },
+        notch: { w: 540, h: 180, radius: 32 },
+        widget: "widget-agency"
+      },
+      {
+        id: 7,
+        start: 16.8,
+        end: 20.0,
+        eyebrow: "AVAILABLE NOW",
+        caption: "Start winning on Upwork today at <span class='tint'>gigradar.dev</span>",
+        tint: "#34d399",
+        wallpaper: "radial-gradient(ellipse at 50% 50%, #061a14 0%, #000000 70%)",
+        orb1: { bg: "rgba(16, 185, 129, 0.25)", top: "15%", left: "30%" },
+        orb2: { bg: "rgba(5, 150, 105, 0.2)", bottom: "15%", right: "30%" },
+        notch: { w: 168, h: 32, radius: 14 },
+        widget: null
+      }
+    ];
+
+    // Spring damping helper
+    function spring(p, reducedMotion = false) {
+      if (reducedMotion) return Math.min(1, Math.max(0, p));
+      // Damped harmonic oscillator with gentle settle
+      p = Math.max(0, Math.min(1, p));
+      const s = 1.70158;
+      return --p * p * ((s + 1) * p + s) + 1;
+    }
+
+    function easeInOutCubic(x) {
+      return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+    }
+
+    // DOM Elements
+    const wallpaperEl = document.getElementById("wallpaper");
+    const orb1El = document.getElementById("orb-1");
+    const orb2El = document.getElementById("orb-2");
+    const notchEl = document.getElementById("notch");
+    const captionContainerEl = document.getElementById("caption-container");
+    const captionEyebrowEl = document.getElementById("caption-eyebrow");
+    const captionTextEl = document.getElementById("caption-text");
+    const heroFinaleEl = document.getElementById("hero-finale");
+    const helloPath = document.querySelector(".hello-path");
+    const intentGaugeCircle = document.getElementById("intent-gauge-circle");
+    const intentGaugeNumber = document.getElementById("intent-gauge-number");
+    const widgets = document.querySelectorAll(".widget-pane");
+    const hudTimeDisplay = document.getElementById("hud-time-display");
+    const hudScrubber = document.getElementById("hud-scrubber");
+    const hudSceneBtns = document.querySelectorAll(".hud-scene-btn");
+    const btnPlay = document.getElementById("btn-play");
+    const btnReducedMotion = document.getElementById("btn-reduced-motion");
+
+    let isReducedMotion = false;
+    let isPlaying = true;
+    let playbackSpeed = 1.0;
+    let lastTimestamp = performance.now();
+    let currentTime = 0.0;
+
+    // Check URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("render") === "1" || urlParams.get("headless") === "1") {
+      document.body.classList.add("render-mode");
+      isPlaying = false;
+    }
+
+    // Window.seek(seconds) implementation for exact frame deterministic drawing
+    window.seek = function(t) {
+      currentTime = Math.max(0, Math.min(TOTAL_DURATION, t));
+      renderFrame(currentTime);
+    };
+
+    function renderFrame(t) {
+      // Find current scene index
+      let sceneIndex = SCENES.findIndex(s => t >= s.start && t < s.end);
+      if (sceneIndex === -1) sceneIndex = SCENES.length - 1;
+      const scene = SCENES[sceneIndex];
+
+      const sceneProgress = (t - scene.start) / (scene.end - scene.start);
+
+      // Interpolate Wallpapers
+      wallpaperEl.style.background = scene.wallpaper;
+      orb1El.style.background = scene.orb1.bg;
+      orb1El.style.top = scene.orb1.top;
+      orb1El.style.left = scene.orb1.left;
+      orb2El.style.background = scene.orb2.bg;
+      orb2El.style.bottom = scene.orb2.bottom;
+      orb2El.style.right = scene.orb2.right;
+
+      // Calculate Notch dimensions
+      let targetW = scene.notch.w;
+      let targetH = scene.notch.h;
+      let targetR = scene.notch.radius;
+
+      // Scene entrance transition spring
+      const enterDur = 0.6; // 0.6s spring
+      const enterP = Math.min(1, (t - scene.start) / enterDur);
+      const enterSpring = spring(enterP, isReducedMotion);
+
+      // Previous scene reference for smooth morph
+      const prevScene = sceneIndex > 0 ? SCENES[sceneIndex - 1] : { notch: { w: 168, h: 32, radius: 14 } };
+
+      let currentW = prevScene.notch.w + (targetW - prevScene.notch.w) * enterSpring;
+      let currentH = prevScene.notch.h + (targetH - prevScene.notch.h) * enterSpring;
+      let currentR = prevScene.notch.radius + (targetR - prevScene.notch.radius) * enterSpring;
+
+      notchEl.style.width = `${Math.round(currentW)}px`;
+      notchEl.style.height = `${Math.round(currentH)}px`;
+      notchEl.style.borderRadius = `0 0 ${Math.round(currentR)}px ${Math.round(currentR)}px`;
+
+      // Widget Visibility & Transform
+      widgets.forEach(w => {
+        if (w.id === scene.widget) {
+          // Enter animation
+          const widgetOpacity = Math.min(1, Math.max(0, (enterP - 0.2) / 0.6));
+          const widgetScale = 0.9 + 0.1 * enterSpring;
+          w.style.opacity = widgetOpacity;
+          w.style.transform = `scale(${widgetScale})`;
+          w.style.pointerEvents = "auto";
+        } else {
+          w.style.opacity = 0;
+          w.style.transform = "scale(0.9)";
+          w.style.pointerEvents = "none";
+        }
+      });
+
+      // Special Scene 1: Hello Handwriting Stroke
+      if (scene.id === 1) {
+        // Draw stroke between 0.4s and 2.2s
+        const drawP = Math.min(1, Math.max(0, (t - 0.4) / 1.6));
+        const offset = 800 * (1 - easeInOutCubic(drawP));
+        helloPath.style.strokeDashoffset = offset;
+      }
+
+      // Special Scene 2: Intent Gauge Number & Ring animation
+      if (scene.id === 2) {
+        const gaugeP = Math.min(1, Math.max(0, (t - 2.8) / 1.0));
+        const score = Math.round(94 * easeInOutCubic(gaugeP));
+        intentGaugeNumber.textContent = score;
+        // Gauge stroke-dashoffset: 345 circumference, 94% = 345 * (1 - 0.94) = 20.7
+        const targetOffset = 345 - (345 * 0.94 * easeInOutCubic(gaugeP));
+        intentGaugeCircle.style.strokeDashoffset = targetOffset;
+      }
+
+      // Special Scene 7: Hero Finale
+      if (scene.id === 7) {
+        captionContainerEl.style.opacity = 0;
+        captionContainerEl.style.transform = "translateY(20px)";
+
+        const finaleEnterP = Math.min(1, Math.max(0, (t - 16.8) / 0.8));
+        const finaleSpring = spring(finaleEnterP, isReducedMotion);
+        heroFinaleEl.style.opacity = finaleEnterP;
+        heroFinaleEl.style.transform = `translate(-50%, calc(-50% + ${Math.round((1 - finaleSpring) * 35)}px)) scale(${0.92 + 0.08 * finaleSpring})`;
+      } else {
+        heroFinaleEl.style.opacity = 0;
+        heroFinaleEl.style.transform = "translate(-50%, -40%) scale(0.9)";
+
+        // Caption Enter & Exit
+        const captionFadeIn = Math.min(1, Math.max(0, (t - scene.start) / 0.5));
+        const captionFadeOut = Math.min(1, Math.max(0, (scene.end - t) / 0.3));
+        const captionAlpha = Math.min(captionFadeIn, captionFadeOut);
+
+        captionContainerEl.style.opacity = captionAlpha;
+        captionContainerEl.style.transform = `translateY(${Math.round((1 - captionFadeIn) * 18)}px)`;
+
+        captionEyebrowEl.textContent = scene.eyebrow;
+        captionEyebrowEl.style.color = scene.tint;
+        captionTextEl.innerHTML = scene.caption;
+        const tintSpan = captionTextEl.querySelector(".tint");
+        if (tintSpan) {
+          tintSpan.style.color = scene.tint;
+          tintSpan.style.textShadow = `0 0 35px ${scene.tint}66`;
+        }
+      }
+
+      // Update HUD
+      if (!document.body.classList.contains("render-mode")) {
+        const mm = String(Math.floor(t / 60)).padStart(2, "0");
+        const ss = String(Math.floor(t % 60)).padStart(2, "0");
+        const ms = String(Math.floor((t % 1) * 100)).padStart(2, "0");
+        const frame = Math.floor(t * 30);
+        hudTimeDisplay.textContent = `${mm}:${ss}.${ms} | F${frame}/600`;
+        hudScrubber.value = t;
+
+        hudSceneBtns.forEach((btn, idx) => {
+          if (idx === sceneIndex) {
+            btn.classList.add("active");
+          } else {
+            btn.classList.remove("active");
+          }
+        });
+      }
+    }
+
+    // Responsive Canvas Scaler (scales 1920x1080 stage to fit any window size)
+    function resizeStage() {
+      if (document.body.classList.contains("render-mode")) {
+        const stage = document.getElementById("viewport-container");
+        stage.style.transform = "scale(1)";
+        return;
+      }
+      const stage = document.getElementById("viewport-container");
+      const scaleX = window.innerWidth / 1920;
+      const scaleY = window.innerHeight / 1080;
+      const scale = Math.min(scaleX, scaleY);
+      stage.style.transform = `scale(${scale})`;
+    }
+
+    window.addEventListener("resize", resizeStage);
+    resizeStage();
+
+    // HUD Interactions
+    btnPlay.addEventListener("click", () => {
+      isPlaying = !isPlaying;
+      btnPlay.textContent = isPlaying ? "⏸ Pause" : "▶ Play";
+    });
+
+    hudScrubber.addEventListener("input", (e) => {
+      isPlaying = false;
+      btnPlay.textContent = "▶ Play";
+      window.seek(parseFloat(e.target.value));
+    });
+
+    hudSceneBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const t = parseFloat(btn.dataset.time);
+        window.seek(t);
+      });
+    });
+
+    btnReducedMotion.addEventListener("click", () => {
+      isReducedMotion = !isReducedMotion;
+      btnReducedMotion.textContent = isReducedMotion ? "Motion: Linear" : "Motion: Spring";
+      renderFrame(currentTime);
+    });
+
+    const btnSpeed = document.getElementById("btn-speed");
+    btnSpeed.addEventListener("click", () => {
+      if (playbackSpeed === 1.0) playbackSpeed = 2.0;
+      else if (playbackSpeed === 2.0) playbackSpeed = 0.5;
+      else playbackSpeed = 1.0;
+      btnSpeed.textContent = `${playbackSpeed}x`;
+    });
+
+    // Keyboard Shortcuts
+    window.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        btnPlay.click();
+      } else if (e.code === "ArrowRight") {
+        window.seek(currentTime + 1.0);
+      } else if (e.code === "ArrowLeft") {
+        window.seek(currentTime - 1.0);
+      }
+    });
+
+    // Real-Time Playback Animation Loop
+    function animationLoop(now) {
+      if (isPlaying) {
+        const delta = (now - lastTimestamp) / 1000;
+        currentTime += delta * playbackSpeed;
+        if (currentTime >= TOTAL_DURATION) {
+          currentTime = 0; // loop
+        }
+        renderFrame(currentTime);
+      }
+      lastTimestamp = now;
+      requestAnimationFrame(animationLoop);
+    }
+
+    // Initial render
+    window.seek(0);
+    requestAnimationFrame(animationLoop);
+  </script>
+</body>
+</html>
