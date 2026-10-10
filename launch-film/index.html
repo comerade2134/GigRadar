@@ -1040,9 +1040,12 @@
       <button class="hud-scene-btn" data-time="14.0">6. Agency</button>
       <button class="hud-scene-btn" data-time="16.8">7. Finale</button>
     </div>
+    <button id="btn-sound" class="hud-btn">🔊 Sound: ON</button>
     <button id="btn-speed" class="hud-btn">1.0x</button>
     <button id="btn-reduced-motion" class="hud-btn">Motion: Spring</button>
   </div>
+
+  <audio id="audio-soundtrack" src="./soundtrack.wav" preload="auto"></audio>
 
   <script>
     // Total Duration: 20 seconds, 30fps = 600 frames
@@ -1333,22 +1336,51 @@
     window.addEventListener("resize", resizeStage);
     resizeStage();
 
+    const audioEl = document.getElementById("audio-soundtrack");
+    const btnSound = document.getElementById("btn-sound");
+    let isMuted = false;
+
+    function syncAudio(t, playing) {
+      if (!audioEl || document.body.classList.contains("render-mode")) return;
+      if (Math.abs(audioEl.currentTime - t) > 0.15) {
+        audioEl.currentTime = t;
+      }
+      audioEl.playbackRate = playbackSpeed;
+      audioEl.muted = isMuted;
+      if (playing && !isMuted) {
+        if (audioEl.paused) {
+          audioEl.play().catch(() => {});
+        }
+      } else {
+        if (!audioEl.paused) audioEl.pause();
+      }
+    }
+
     // HUD Interactions
     btnPlay.addEventListener("click", () => {
       isPlaying = !isPlaying;
       btnPlay.textContent = isPlaying ? "⏸ Pause" : "▶ Play";
+      syncAudio(currentTime, isPlaying);
+    });
+
+    btnSound.addEventListener("click", () => {
+      isMuted = !isMuted;
+      btnSound.textContent = isMuted ? "🔇 Sound: OFF" : "🔊 Sound: ON";
+      syncAudio(currentTime, isPlaying);
     });
 
     hudScrubber.addEventListener("input", (e) => {
       isPlaying = false;
       btnPlay.textContent = "▶ Play";
       window.seek(parseFloat(e.target.value));
+      syncAudio(currentTime, false);
     });
 
     hudSceneBtns.forEach(btn => {
       btn.addEventListener("click", () => {
         const t = parseFloat(btn.dataset.time);
         window.seek(t);
+        syncAudio(t, isPlaying);
       });
     });
 
@@ -1364,6 +1396,7 @@
       else if (playbackSpeed === 2.0) playbackSpeed = 0.5;
       else playbackSpeed = 1.0;
       btnSpeed.textContent = `${playbackSpeed}x`;
+      if (audioEl) audioEl.playbackRate = playbackSpeed;
     });
 
     // Keyboard Shortcuts
@@ -1373,8 +1406,10 @@
         btnPlay.click();
       } else if (e.code === "ArrowRight") {
         window.seek(currentTime + 1.0);
+        syncAudio(currentTime, isPlaying);
       } else if (e.code === "ArrowLeft") {
         window.seek(currentTime - 1.0);
+        syncAudio(currentTime, isPlaying);
       }
     });
 
@@ -1385,6 +1420,7 @@
         currentTime += delta * playbackSpeed;
         if (currentTime >= TOTAL_DURATION) {
           currentTime = 0; // loop
+          if (audioEl) audioEl.currentTime = 0;
         }
         renderFrame(currentTime);
       }
