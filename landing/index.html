@@ -73,6 +73,10 @@
       </div>
 
       <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+        <a href="#launch-film" class="hover:text-white transition-colors flex items-center gap-1.5 text-brand-300">
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse"></span>
+          Launch Film
+        </a>
         <a href="#features" class="hover:text-white transition-colors">Features</a>
         <a href="#calculator" class="hover:text-white transition-colors">ROI Calculator</a>
         <a href="#agency" class="hover:text-white transition-colors">Agency Suite</a>
@@ -106,6 +110,9 @@
       <a href="./gigradar-0.3.3.zip" download class="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-brand-400 via-emerald-400 to-teal-400 px-8 py-4 text-base font-black text-slate-950 shadow-[0_0_35px_rgba(16,185,129,0.35)] hover:shadow-[0_0_50px_rgba(16,185,129,0.6)] transition-all hover:scale-[1.02] active:scale-[.98]">
         <span>⬇️ Download Free v0.3.3 (.zip)</span>
       </a>
+      <a href="#launch-film" id="btn-hero-watch-film" class="flex items-center gap-2 rounded-2xl border border-brand-500/40 bg-brand-500/10 px-6 py-4 text-sm font-bold text-brand-300 hover:bg-brand-500/20 hover:text-white transition-all shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+        <span>▶ Watch Film (20s)</span>
+      </a>
       <a href="#install" class="rounded-2xl border border-edge bg-raised/80 px-6 py-4 text-sm font-bold text-slate-200 hover:border-brand-500/40 hover:text-white transition-all">
         📖 2-Min Install Guide
       </a>
@@ -131,6 +138,60 @@
       </div>
     </div>
   </header>
+
+  <!-- Apple-Style Mac Launch Film Floating Player -->
+  <section id="launch-film" class="relative max-w-5xl mx-auto px-6 -mt-8 mb-24 z-20">
+    <div class="text-center mb-6">
+      <div class="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-300 mb-2">
+        <span class="text-white"></span> Keynote Film • 1080p Master with Sound
+      </div>
+      <h2 class="text-2xl sm:text-3xl font-black text-white">Experience GigRadar in Action</h2>
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">Watch how the dynamic Mac notch reveals client intent, scrubs proposal fluff, and coordinates team bids.</p>
+    </div>
+
+    <!-- Floating Mac Hardware Frame -->
+    <div class="relative group rounded-2xl sm:rounded-3xl border border-edge/80 bg-raised/90 p-2 sm:p-3 shadow-[0_25px_80px_rgba(0,0,0,0.85)] backdrop-blur-2xl transition-all duration-500 hover:shadow-[0_30px_100px_rgba(16,185,129,0.25)]">
+      <!-- Ambient Glow Behind Device -->
+      <div class="pointer-events-none absolute -inset-1 rounded-3xl bg-gradient-to-r from-brand-500/25 via-indigo-500/20 to-teal-500/25 blur-2xl opacity-70 group-hover:opacity-100 transition-opacity"></div>
+      
+      <!-- Display Screen Bezel -->
+      <div class="relative overflow-hidden rounded-xl sm:rounded-2xl bg-black border border-white/10 aspect-video shadow-inner">
+        <video 
+          id="hero-launch-video" 
+          src="./gigradar-apple-launch.mp4" 
+          poster="./video-poster.png"
+          playsinline 
+          loop 
+          muted 
+          autoplay
+          class="w-full h-full object-cover"
+        ></video>
+
+        <!-- Floating Glass HUD Controls -->
+        <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-auto">
+          <div class="flex items-center gap-2">
+            <button id="video-play-btn" class="flex items-center gap-2 rounded-xl bg-black/70 hover:bg-black/90 backdrop-blur-md border border-white/20 px-3 py-1.5 text-xs font-bold text-white transition-all shadow-lg hover:scale-[1.03]">
+              <span id="video-play-icon">⏸</span>
+              <span id="video-play-text">Pause</span>
+            </button>
+            <button id="video-sound-btn" class="flex items-center gap-2 rounded-xl bg-black/70 hover:bg-black/90 backdrop-blur-md border border-white/20 px-3 py-1.5 text-xs font-bold text-white transition-all shadow-lg hover:scale-[1.03]">
+              <span id="video-sound-icon">🔇</span>
+              <span id="video-sound-text">Unmute</span>
+            </button>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <span class="hidden sm:inline-flex rounded-xl bg-brand-500/20 border border-brand-500/40 px-3 py-1 text-[11px] font-bold text-brand-300 backdrop-blur-md">
+               20s Keynote
+            </span>
+            <button id="video-fullscreen-btn" title="Toggle Fullscreen" class="rounded-xl bg-black/70 hover:bg-black/90 backdrop-blur-md border border-white/20 px-3 py-1.5 text-xs font-bold text-white transition-all shadow-lg hover:scale-[1.03]">
+              ⛶ Fullscreen
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- Interactive Connects Burn Calculator -->
   <section id="calculator" class="py-20 px-6 bg-panel/40 border-y border-edge/60 relative">
@@ -408,6 +469,63 @@
     propSlider.addEventListener('input', updateCalc)
     connSlider.addEventListener('input', updateCalc)
     updateCalc()
+
+    // Launch Video Player Controls
+    const launchVideo = document.getElementById('hero-launch-video')
+    const videoPlayBtn = document.getElementById('video-play-btn')
+    const videoPlayIcon = document.getElementById('video-play-icon')
+    const videoPlayText = document.getElementById('video-play-text')
+    const videoSoundBtn = document.getElementById('video-sound-btn')
+    const videoSoundIcon = document.getElementById('video-sound-icon')
+    const videoSoundText = document.getElementById('video-sound-text')
+    const videoFullscreenBtn = document.getElementById('video-fullscreen-btn')
+    const heroWatchFilmBtn = document.getElementById('btn-hero-watch-film')
+
+    if (launchVideo) {
+      videoPlayBtn.addEventListener('click', () => {
+        if (launchVideo.paused) {
+          launchVideo.play()
+          videoPlayIcon.textContent = '⏸'
+          videoPlayText.textContent = 'Pause'
+        } else {
+          launchVideo.pause()
+          videoPlayIcon.textContent = '▶'
+          videoPlayText.textContent = 'Play'
+        }
+      })
+
+      videoSoundBtn.addEventListener('click', () => {
+        if (launchVideo.muted) {
+          launchVideo.muted = false
+          videoSoundIcon.textContent = '🔊'
+          videoSoundText.textContent = 'Mute'
+        } else {
+          launchVideo.muted = true
+          videoSoundIcon.textContent = '🔇'
+          videoSoundText.textContent = 'Unmute'
+        }
+      })
+
+      videoFullscreenBtn.addEventListener('click', () => {
+        if (launchVideo.requestFullscreen) {
+          launchVideo.requestFullscreen()
+        } else if (launchVideo.webkitRequestFullscreen) {
+          launchVideo.webkitRequestFullscreen()
+        }
+      })
+
+      if (heroWatchFilmBtn) {
+        heroWatchFilmBtn.addEventListener('click', () => {
+          launchVideo.currentTime = 0
+          launchVideo.muted = false
+          launchVideo.play()
+          videoSoundIcon.textContent = '🔊'
+          videoSoundText.textContent = 'Mute'
+          videoPlayIcon.textContent = '⏸'
+          videoPlayText.textContent = 'Pause'
+        })
+      }
+    }
   </script>
 </body>
 </html>
