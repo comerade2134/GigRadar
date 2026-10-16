@@ -41,7 +41,7 @@ async function main() {
     { name: 'scene-4-shield.png', time: 9.8, desc: 'Scene 4: Waste & Scam Shield' },
     { name: 'scene-5-autofill.png', time: 12.6, desc: 'Scene 5: 1-Click Proposal Autofill' },
     { name: 'scene-6-agency.png', time: 15.4, desc: 'Scene 6: Agency Team Sync Radar' },
-    { name: 'scene-7-finale.png', time: 18.5, desc: 'Scene 7: GigRadar OS Hero Finale' }
+    { name: 'scene-7-finale.png', time: 18.5, desc: 'Scene 7: JobSonar OS Hero Finale' }
   ];
 
   console.log('📸 Capturing keyframe snapshots for each scene...');
@@ -64,7 +64,7 @@ async function main() {
 
   // Full MP4 render
   console.log('\n🎬 Rendering full 1080p 30fps MP4 video via ffmpeg...');
-  const outputFile = path.resolve(__dirname, 'gigradar-apple-launch.mp4');
+  const outputFile = path.resolve(__dirname, 'jobsonar-launch.mp4');
 
   const ffmpeg = spawn('ffmpeg', [
     '-y',

@@ -496,8 +496,8 @@ async function main() {
 
   // Multiplex with existing video using FFmpeg
   console.log('🎬 Multiplexing audio soundtrack with 1080p MP4 video via FFmpeg...');
-  const inputVideo = path.resolve(__dirname, 'gigradar-apple-launch.mp4');
-  const tempOutput = path.resolve(__dirname, 'gigradar-apple-launch-master.mp4');
+  const inputVideo = path.resolve(__dirname, 'jobsonar-launch.mp4');
+  const tempOutput = path.resolve(__dirname, 'jobsonar-launch-master.mp4');
 
   await new Promise((resolve, reject) => {
     const ffmpeg = spawn('ffmpeg', [
@@ -526,12 +526,12 @@ async function main() {
   fs.unlinkSync(tempOutput);
 
   // Also update landing directory copy
-  const landingVideo = path.resolve(__dirname, '../landing/gigradar-apple-launch.mp4');
+  const landingVideo = path.resolve(__dirname, '../landing/jobsonar-launch.mp4');
   fs.copyFileSync(inputVideo, landingVideo);
 
   console.log(`\n🎉 Success! Audio + Video master created:`);
-  console.log(`  - launch-film/gigradar-apple-launch.mp4`);
-  console.log(`  - landing/gigradar-apple-launch.mp4`);
+  console.log(`  - launch-film/jobsonar-launch.mp4`);
+  console.log(`  - landing/jobsonar-launch.mp4`);
   console.log(`  - launch-film/soundtrack.wav`);
 }
 
