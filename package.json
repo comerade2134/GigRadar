@@ -1,7 +1,7 @@
 {
-  "name": "gigradar",
+  "name": "jobsonar",
   "private": true,
-  "version": "0.3.3",
+  "version": "0.3.4",
   "type": "module",
   "description": "Upwork client intent scores, hire-rate red flags, name extraction and proposal hooks.",
   "scripts": {
@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "shots": "node scripts/capture-store-shots.js",
-    "zip": "vite build && powershell -NoProfile -Command \"Compress-Archive -Path dist/* -DestinationPath gigradar.zip -Force\""
+    "zip": "vite build && powershell -NoProfile -Command \"Compress-Archive -Path dist/* -DestinationPath jobsonar.zip -Force\""
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0-beta.28",

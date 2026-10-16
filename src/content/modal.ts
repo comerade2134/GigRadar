@@ -941,7 +941,7 @@ function ensurePanel(docked: boolean, collapsed: boolean): void {
 
   const topOffset = getTopNavOffset()
   const root = document.createElement('div')
-  root.dataset.gigradarModal = ''
+  root.dataset.jobsonarModal = ''
   root.style.cssText = `position:fixed;inset:0;z-index:99999;pointer-events:none;--gr-top-offset:${topOffset}px;`
   shadow = root.attachShadow({ mode: 'closed' })
 
@@ -964,7 +964,7 @@ function ensurePanel(docked: boolean, collapsed: boolean): void {
     'panel' + (docked ? ' docked' : '') + (collapsed ? ' collapsed' : '')
   panelEl.setAttribute('role', 'dialog')
   panelEl.setAttribute('aria-modal', 'true')
-  panelEl.setAttribute('aria-label', 'GigRadar Client Intel')
+  panelEl.setAttribute('aria-label', 'JobSonar Client Intel')
 
   contentEl = document.createElement('div')
   contentEl.className = 'body'
@@ -2302,10 +2302,10 @@ export function mountInlineCard(
     })
   }
 
-  const existing = container.querySelector('[data-gigradar-inline]')
+  const existing = container.querySelector('[data-jobsonar-inline]')
   const inlineHost = document.createElement('div')
-  inlineHost.dataset.gigradarInline = ''
-  inlineHost.dataset.gigradarJobId = data.meta.jobId
+  inlineHost.dataset.jobsonarInline = ''
+  inlineHost.dataset.jobsonarJobId = data.meta.jobId
   inlineHost.style.cssText = 'display:block;width:100%'
 
   const shadow = inlineHost.attachShadow({ mode: 'closed' })
@@ -2380,7 +2380,7 @@ export function mountInlineCard(
         ${tileValue}<small>${tileLabel}</small>
       </div>
       <div class="brandline">
-        <b>GigRadar Client Intel</b>
+        <b>JobSonar Client Intel</b>
         <span>${escapeHtml(data.score.tier)} intent${
           data.rating ? ` · ★ ${data.rating.avg.toFixed(2)} (${data.rating.count})` : ''
         }${data.meta.proposalCount != null ? ` · ${data.meta.proposalCount}+ proposals` : ''}</span>

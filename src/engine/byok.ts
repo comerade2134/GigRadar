@@ -84,7 +84,7 @@ export async function polishHook(
     return { ok: false, text: 'BYOK is not configured. Add your API key in Settings.' }
   }
   if (!extensionContextValid()) {
-    return { ok: false, text: 'GigRadar was reloaded — refresh this page and try again.' }
+    return { ok: false, text: 'JobSonar was reloaded — refresh this page and try again.' }
   }
 
   const prompt = formatPolishPrompt(baseHook, context)
@@ -122,7 +122,7 @@ export async function generateClientDossierSummary(data: {
     return { ok: false, text: 'BYOK is not configured. Add your API key in Settings.' }
   }
   if (!extensionContextValid()) {
-    return { ok: false, text: 'GigRadar was reloaded — refresh this page and try again.' }
+    return { ok: false, text: 'JobSonar was reloaded — refresh this page and try again.' }
   }
 
   const prompt = [

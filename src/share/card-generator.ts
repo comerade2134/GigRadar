@@ -11,8 +11,8 @@ export function formatShareTweetText(stats: ShareCardStats): string {
   const roiPart = stats.proRoiMultiplier ? ` (${stats.proRoiMultiplier}x ROI on Pro)` : ''
   return (
     `Upwork Connects are getting out of hand.\n\n` +
-    `GigRadar just protected ${stats.connectsSaved} Connects (~$${dollars}${roiPart}) from ghost listings and scam jobs for me so far.\n\n` +
-    `Get GigRadar on Chrome Web Store: ${OFFICIAL_WEBSITE_URL}\n\n#Upwork #Freelancing #GigRadar`
+    `JobSonar just protected ${stats.connectsSaved} Connects (~$${dollars}${roiPart}) from ghost listings and scam jobs for me so far.\n\n` +
+    `Get JobSonar on Chrome Web Store: ${OFFICIAL_WEBSITE_URL}\n\n#Upwork #Freelancing #JobSonar`
   )
 }
 
@@ -20,13 +20,13 @@ export function formatLinkedInShareText(stats: ShareCardStats): string {
   const dollars = stats.dollarsSaved.toFixed(2)
   return (
     `Freelancing on Upwork in 2026 requires discipline with Connects spend.\n\n` +
-    `I've been using GigRadar to screen client hire rates, payment history, and ghost listings before bidding.\n\n` +
+    `I've been using JobSonar to screen client hire rates, payment history, and ghost listings before bidding.\n\n` +
     `Results so far:\n` +
     `🛡️ ${stats.connectsSaved} Connects protected from low-hire & ghost jobs\n` +
     `💵 ~$${dollars} saved in platform bidding fees\n` +
     `⚡ 100% deterministic, local client inspection\n\n` +
     `Inspect clients before spending Connects: ${OFFICIAL_WEBSITE_URL}\n\n` +
-    `#Upwork #FreelanceLife #ClientVetting #Productivity #GigRadar`
+    `#Upwork #FreelanceLife #ClientVetting #Productivity #JobSonar`
   )
 }
 
@@ -117,7 +117,7 @@ export function renderCardToCanvas(
   // Brand Name & Tagline
   ctx.fillStyle = '#FFFFFF'
   ctx.font = 'bold 36px Inter, system-ui, -apple-system, sans-serif'
-  ctx.fillText('GigRadar', logoX + logoSize + 20, logoY + 36)
+  ctx.fillText('JobSonar', logoX + logoSize + 20, logoY + 36)
 
   ctx.fillStyle = '#10B981'
   ctx.font = 'bold 13px Inter, system-ui, -apple-system, sans-serif'
@@ -206,7 +206,7 @@ export function renderCardToCanvas(
   ctx.font = '500 15px Inter, system-ui, -apple-system, sans-serif'
   ctx.fillText('100% Deterministic Verification · Zero Telemetry · Upwork Inspector', margin + 44, footerY + 8)
 
-  const tagText = '#Upwork #Freelancing #GigRadar'
+  const tagText = '#Upwork #Freelancing #JobSonar'
   ctx.fillStyle = '#94A3B8'
   ctx.font = 'bold 15px Inter, system-ui, -apple-system, sans-serif'
   const tagWidth = ctx.measureText(tagText).width

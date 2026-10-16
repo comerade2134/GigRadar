@@ -656,7 +656,7 @@ function mountToolbar(textarea: HTMLTextAreaElement): void {
 
   const brand = document.createElement('span')
   brand.className = 'brand'
-  brand.textContent = 'GigRadar'
+  brand.textContent = 'JobSonar'
 
   const autopilotBtn = document.createElement('button')
   autopilotBtn.type = 'button'

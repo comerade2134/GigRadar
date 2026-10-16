@@ -15,9 +15,9 @@ describe('card-generator formatShareTweetText', () => {
     }
     const tweet = formatShareTweetText(stats)
     expect(tweet).toContain('160 Connects (~$24.00 (2.7x ROI on Pro))')
-    expect(tweet).toContain('#Upwork #Freelancing #GigRadar')
+    expect(tweet).toContain('#Upwork #Freelancing #JobSonar')
     expect(tweet).toContain('https://chromewebstore.google.com/detail/nheegeimgmgkbklpgbhipdkmfoedflnm?utm_source=item-share-cb')
-    expect(tweet).not.toContain('@GigRadar')
+    expect(tweet).not.toContain('@JobSonar')
   })
 
   it('omits ROI part when proRoiMultiplier is undefined or null', () => {
@@ -40,7 +40,7 @@ describe('card-generator formatLinkedInShareText', () => {
     const post = formatLinkedInShareText(stats)
     expect(post).toContain('🛡️ 220 Connects protected from low-hire & ghost jobs')
     expect(post).toContain('💵 ~$33.00 saved in platform bidding fees')
-    expect(post).toContain('#Upwork #FreelanceLife #ClientVetting #Productivity #GigRadar')
+    expect(post).toContain('#Upwork #FreelanceLife #ClientVetting #Productivity #JobSonar')
   })
 })
 
@@ -85,7 +85,7 @@ describe('card-generator renderCardToCanvas', () => {
     expect(mockCanvas.width).toBe(1200)
     expect(mockCanvas.height).toBe(630)
     expect(mockCtx.fillRect).toHaveBeenCalled()
-    expect(mockCtx.fillText).toHaveBeenCalledWith('GigRadar', expect.any(Number), expect.any(Number))
+    expect(mockCtx.fillText).toHaveBeenCalledWith('JobSonar', expect.any(Number), expect.any(Number))
     expect(mockCtx.fillText).toHaveBeenCalledWith('100', expect.any(Number), expect.any(Number))
   })
 

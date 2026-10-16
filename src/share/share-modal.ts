@@ -8,11 +8,11 @@ import {
 import { t, type SupportedLocale } from '../i18n'
 
 export function openShareModal(stats: ShareCardStats, locale: SupportedLocale): void {
-  const existing = document.getElementById('gigradar-share-modal-overlay')
+  const existing = document.getElementById('jobsonar-share-modal-overlay')
   if (existing) existing.remove()
 
   const overlay = document.createElement('div')
-  overlay.id = 'gigradar-share-modal-overlay'
+  overlay.id = 'jobsonar-share-modal-overlay'
   overlay.className =
     'fixed inset-0 z-[100] flex flex-col bg-[#0D0F12] text-ink overflow-y-auto custom-scrollbar animate-fade-in'
 
@@ -49,7 +49,7 @@ export function openShareModal(stats: ShareCardStats, locale: SupportedLocale): 
 
         <!-- Live High-Resolution Card Preview -->
         <div class="relative overflow-hidden rounded-xl border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.6)] bg-panel">
-          <img id="share-card-preview" src="${dataUrl}" alt="GigRadar Savings Card" class="w-full h-auto block select-none" />
+          <img id="share-card-preview" src="${dataUrl}" alt="JobSonar Savings Card" class="w-full h-auto block select-none" />
         </div>
 
         <!-- Tweet Snippet Preview -->
@@ -109,7 +109,7 @@ export function openShareModal(stats: ShareCardStats, locale: SupportedLocale): 
         <span class="h-1.5 w-1.5 rounded-full bg-brand-400"></span>
         Zero Telemetry · 100% Deterministic
       </span>
-      <span class="font-mono text-[9.5px] text-slate-500">gigradar.io</span>
+      <span class="font-mono text-[9.5px] text-slate-500">jobsonar</span>
     </footer>
   `
 
@@ -159,7 +159,7 @@ export function openShareModal(stats: ShareCardStats, locale: SupportedLocale): 
   const triggerDownload = (): void => {
     const a = document.createElement('a')
     a.href = dataUrl
-    a.download = `gigradar-savings-${stats.connectsSaved}-connects.png`
+    a.download = `jobsonar-savings-${stats.connectsSaved}-connects.png`
     document.body.appendChild(a)
     a.click()
     a.remove()

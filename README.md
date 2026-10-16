@@ -1,14 +1,14 @@
 <div align="center">
 
-# ⚡ GigRadar — Upwork Client Inspector
+# ⚡ JobSonar — Upwork Client Inspector
 
 <p align="center">
   <strong>Know the client before you spend a single Connect.</strong>
 </p>
 
 <p align="center">
-  <a href="https://chromewebstore.google.com/detail/gigradar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm"><img src="https://img.shields.io/badge/Chrome_Web_Store-Live-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
-  <a href="https://github.com/comerade2134/GigRadar/releases"><img src="https://img.shields.io/badge/Release-v0.3.3-10B981?style=for-the-badge&logo=github&logoColor=white" alt="Release v0.3.3"></a>
+  <a href="https://chromewebstore.google.com/detail/jobsonar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm"><img src="https://img.shields.io/badge/Chrome_Web_Store-Live-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
+  <a href="https://github.com/comerade2134/JobSonar/releases"><img src="https://img.shields.io/badge/Release-v0.3.4-10B981?style=for-the-badge&logo=github&logoColor=white" alt="Release v0.3.4"></a>
   <a href="https://developer.chrome.com/docs/extensions/mv3/intro/"><img src="https://img.shields.io/badge/Manifest-V3-10B981?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Manifest V3"></a>
   <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
   <a href="https://vitejs.dev/"><img src="https://img.shields.io/badge/Vite-5.4-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"></a>
@@ -16,11 +16,11 @@
 </p>
 
 <p align="center">
-  <a href="https://chromewebstore.google.com/detail/gigradar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm"><strong>Install on Chrome Web Store</strong></a> •
-  <a href="https://gigradar.dev/"><strong>Live Website</strong></a> •
+  <a href="https://chromewebstore.google.com/detail/jobsonar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm"><strong>Install on Chrome Web Store</strong></a> •
+  <a href="https://jobsonar.dev/"><strong>Live Website</strong></a> •
   <a href="#-quick-install-beta"><strong>Quick Install (Beta)</strong></a> •
   <a href="#-features"><strong>Features</strong></a> •
-  <a href="#-the-problem--gigradar-solution"><strong>Comparison</strong></a> •
+  <a href="#-the-problem--jobsonar-solution"><strong>Comparison</strong></a> •
   <a href="#-architecture"><strong>Architecture</strong></a> •
   <a href="#-faq"><strong>FAQ</strong></a>
 </p>
@@ -29,15 +29,15 @@
 
 </div>
 
-Upwork hides client hiring history, true historical hourly pay, and past contractor names behind 3 clicks. **GigRadar** is a lightweight, zero-telemetry Chrome extension (Manifest V3) that parses and injects a deterministic **0–100 Client Intent Score**, **red-flag waste alerts**, **extracted client names**, and **personalized proposal hooks** directly into your Upwork feed in real-time.
+Upwork hides client hiring history, true historical hourly pay, and past contractor names behind 3 clicks. **JobSonar** is a lightweight, zero-telemetry Chrome extension (Manifest V3) that parses and injects a deterministic **0–100 Client Intent Score**, **red-flag waste alerts**, **extracted client names**, and **personalized proposal hooks** directly into your Upwork feed in real-time.
 
 ---
 
-## 🛑 The Problem & GigRadar Solution
+## 🛑 The Problem & JobSonar Solution
 
 Upwork charges **~$0.15 per Connect**, and modern listings routinely demand **8 to 16 Connects ($1.20 to $2.40)** just to submit a single proposal. Freelancers waste thousands of dollars annually bidding on ghost listings, clients with 0% hire rates, and scam traps.
 
-| Upwork Default (Blind Bidding) | GigRadar Injected Telemetry |
+| Upwork Default (Blind Bidding) | JobSonar Injected Telemetry |
 | :--- | :--- |
 | ❌ Lists inflated "$60–$90/hr" budget with no context | ⚡ **True Pay Benchmark**: Shows client actually paid **$8.50/hr** on past contracts |
 | ❌ Hides client hire rate unless you open detail drawer | ⚡ **Deterministic Intent Score (0–100)**: Flags `<25%` danger & `<30%` feed warnings |
@@ -83,20 +83,20 @@ Bring your own OpenAI or Anthropic API key stored 100% locally in `chrome.storag
 
 ### Option A: Official Chrome Web Store (Recommended — 1 Click)
 
-👉 **[Add to Chrome from Chrome Web Store](https://chromewebstore.google.com/detail/gigradar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm)**
+👉 **[Add to Chrome from Chrome Web Store](https://chromewebstore.google.com/detail/jobsonar-%E2%80%94-upwork-client/nheegeimgmgkbklpgbhipdkmfoedflnm)**
 
 1. Click **Add to Chrome** on the Web Store page.
-2. Open [Upwork](https://www.upwork.com/nx/search/jobs/) — GigRadar badges will appear under every listing automatically!
+2. Open [Upwork](https://www.upwork.com/nx/search/jobs/) — JobSonar badges will appear under every listing automatically!
 
 ---
 
 ### Option B: Pre-built Release Package (.zip)
 
-1. Download **[`gigradar.zip`](https://github.com/comerade2134/GigRadar/releases)** from the latest release.
-2. Unzip `gigradar.zip` to a local folder (e.g., `Downloads/gigradar`).
+1. Download **[`jobsonar.zip`](https://github.com/comerade2134/JobSonar/releases)** from the latest release.
+2. Unzip `jobsonar.zip` to a local folder (e.g., `Downloads/jobsonar`).
 3. Open `chrome://extensions` in your browser.
 4. Toggle **Developer mode** on (top-right).
-5. Click **Load unpacked** and select the unzipped `gigradar` folder.
+5. Click **Load unpacked** and select the unzipped `jobsonar` folder.
 
 ---
 
@@ -104,8 +104,8 @@ Bring your own OpenAI or Anthropic API key stored 100% locally in `chrome.storag
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/comerade2134/GigRadar.git
-cd GigRadar
+git clone https://github.com/comerade2134/JobSonar.git
+cd JobSonar
 
 # 2. Install dependencies
 pnpm install
@@ -156,9 +156,9 @@ src/
 
 ## 🔒 Design & Privacy Guarantees
 
-- **Zero Background Fetching**: GigRadar only parses DOM nodes you actively view in your browser. No mass automated requests on Upwork's servers.
+- **Zero Background Fetching**: JobSonar only parses DOM nodes you actively view in your browser. No mass automated requests on Upwork's servers.
 - **Strict Host Scope**: Content scripts match Upwork and ExtensionPay only; no other hosts are accessed unless BYOK AI or the optional RSS scanner is explicitly enabled.
-- **Shadow DOM Style Isolation**: All injected badges, pills, and drawers live in closed Shadow Roots. Upwork's CSS cannot break GigRadar, and GigRadar styles never leak into Upwork.
+- **Shadow DOM Style Isolation**: All injected badges, pills, and drawers live in closed Shadow Roots. Upwork's CSS cannot break JobSonar, and JobSonar styles never leak into Upwork.
 - **Zero Remote Analytics**: No tracking pixels, no telemetry databases, and no external user tracking.
 
 ---
@@ -170,19 +170,19 @@ Upwork updates their React DOM classes periodically. All selectors live in a sin
 If an Upwork update breaks a badge or panel:
 1. Inspect the new element in Chrome DevTools.
 2. Add the new selector to the top of the ordered fallback array in `src/config/selectors.ts`.
-3. Submit a PR or open a [DOM Selector Issue](https://github.com/comerade2134/GigRadar/issues/new?template=selector_fix.md).
+3. Submit a PR or open a [DOM Selector Issue](https://github.com/comerade2134/JobSonar/issues/new?template=selector_fix.md).
 
 ---
 
 ## 💎 Pricing & Monetization
 
-GigRadar operates on an honest, one-time payment model with **no subscriptions**:
+JobSonar operates on an honest, one-time payment model with **no subscriptions**:
 
 - **Free Tier ($0)**: 0–100 Client Intent Score, red-flag alerts, feed warnings, and basic RSS scanner.
 - **Pro Tier ($9.99 Early Bird · First 50 freelancers → then $19.99)**: Client name extraction, 3x proposal hook generator, historical pay benchmark, and BYOK AI polish.
 
 Pro is unlocked **directly inside the extension** via [ExtensionPay](https://extensionpay.com) and Stripe:
-1. Click the blurred **"Unlock with GigRadar Pro"** card in any drawer or popup.
+1. Click the blurred **"Unlock with JobSonar Pro"** card in any drawer or popup.
 2. Complete checkout on Stripe.
 3. License syncs within seconds and unblurs Pro features immediately.
 
@@ -191,18 +191,18 @@ Pro is unlocked **directly inside the extension** via [ExtensionPay](https://ext
 ## ❓ FAQ
 
 <details>
-<summary><strong>Will using GigRadar get my Upwork account banned?</strong></summary>
-<p>No. GigRadar does not automate proposals, send bot requests, or scrape Upwork's private APIs. It operates strictly as a client-side visual inspector that reads the HTML already loaded in your active browser window and calculates statistics locally.</p>
+<summary><strong>Will using JobSonar get my Upwork account banned?</strong></summary>
+<p>No. JobSonar does not automate proposals, send bot requests, or scrape Upwork's private APIs. It operates strictly as a client-side visual inspector that reads the HTML already loaded in your active browser window and calculates statistics locally.</p>
 </details>
 
 <details>
 <summary><strong>How does client name extraction work?</strong></summary>
-<p>GigRadar scans past freelancer reviews on the client's profile for linguistic greeting and gratitude patterns (e.g., "Sarah was a pleasure to work with...", "Thanks Sarah for the clear specs..."), runs a regex voting engine with a stoplist filter, and outputs the highest-confidence first name.</p>
+<p>JobSonar scans past freelancer reviews on the client's profile for linguistic greeting and gratitude patterns (e.g., "Sarah was a pleasure to work with...", "Thanks Sarah for the clear specs..."), runs a regex voting engine with a stoplist filter, and outputs the highest-confidence first name.</p>
 </details>
 
 <details>
 <summary><strong>Where are my OpenAI / Anthropic API keys stored?</strong></summary>
-<p>Your API keys live strictly in <code>chrome.storage.local</code> on your individual browser profile. They are never sent to any GigRadar server.</p>
+<p>Your API keys live strictly in <code>chrome.storage.local</code> on your individual browser profile. They are never sent to any JobSonar server.</p>
 </details>
 
 ---
@@ -215,7 +215,7 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for de
 
 ## 📄 License
 
-GigRadar is open-source software licensed under the [MIT License](LICENSE).
+JobSonar is open-source software licensed under the [MIT License](LICENSE).
 ExtPay module is vendored locally under AGPLv3.
 
 ---

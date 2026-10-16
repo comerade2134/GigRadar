@@ -193,11 +193,11 @@ export function formatDiscordEmbed(payload: WebhookEventPayload) {
       {
         title: `${eventLabel}: ${payload.jobTitle.slice(0, 100)}`,
         url: payload.jobUrl,
-        description: `GigRadar Agency Lead Update for team BDs.`,
+        description: `JobSonar Agency Lead Update for team BDs.`,
         color,
         fields,
         footer: {
-          text: 'GigRadar Agency Operating System'
+          text: 'JobSonar Agency Operating System'
         },
         timestamp: new Date(payload.timestamp).toISOString()
       }
@@ -207,8 +207,8 @@ export function formatDiscordEmbed(payload: WebhookEventPayload) {
 
 export function formatCustomJson(payload: WebhookEventPayload) {
   return {
-    source: 'gigradar',
-    version: '0.3.2',
+    source: 'jobsonar',
+    version: '0.3.4',
     event: payload.eventType,
     job: {
       id: payload.jobId,
@@ -384,7 +384,7 @@ export async function sendTestWebhook(
     memberName: 'Alex (Agency BD)',
     memberEmail: 'alex@agency.internal',
     status: 'drafting',
-    notes: 'Testing GigRadar Webhook Integration from extension options.',
+    notes: 'Testing JobSonar Webhook Integration from extension options.',
     timestamp: Date.now()
   }
 

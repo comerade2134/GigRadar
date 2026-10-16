@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "GigRadar — Upwork Client Inspector",
-  "version": "0.3.3",
+  "name": "JobSonar — Upwork Client Inspector",
+  "version": "0.3.4",
   "description": "Instant client intent scores, hire-rate red flags, client name extraction and proposal hooks for Upwork freelancers.",
   "minimum_chrome_version": "110",
   "permissions": ["storage", "alarms", "notifications"],
@@ -15,7 +15,7 @@
     "https://*/*"
   ],
   "action": {
-    "default_title": "GigRadar",
+    "default_title": "JobSonar",
     "default_popup": "src/popup/index.html"
   },
   "options_ui": {

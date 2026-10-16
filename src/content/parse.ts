@@ -3,7 +3,7 @@ import type { ActivityStats, ClientSignals, JobBudget, JobMeta, RatingSummary, T
 
 function debugParseFailure(name: string, error: unknown): void {
   try {
-    console.debug(`[GigRadar] ${name} skipped`, error)
+    console.debug(`[JobSonar] ${name} skipped`, error)
   } catch {
     // Debug logging must never become a host-page failure.
   }

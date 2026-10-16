@@ -97,7 +97,7 @@ describe('Webhook and CRM Dispatch Engine', () => {
   describe('formatCustomJson', () => {
     it('formats clean JSON with job, client, and team objects', () => {
       const json = formatCustomJson(samplePayload)
-      expect(json.source).toBe('gigradar')
+      expect(json.source).toBe('jobsonar')
       expect(json.event).toBe('job_claimed')
       expect(json.job.id).toBe('~job_123')
       expect(json.job.dealValueUsd).toBe(2500)

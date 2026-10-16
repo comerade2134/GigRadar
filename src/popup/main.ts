@@ -139,7 +139,7 @@ async function init(): Promise<void> {
         <div class="flex items-center gap-2.5">
           ${LOGO_SVG}
           <div class="flex flex-col">
-            <span class="text-sm font-black tracking-tight text-white leading-none">GigRadar</span>
+            <span class="text-sm font-black tracking-tight text-white leading-none">JobSonar</span>
             <span class="text-[9.5px] font-medium text-mute tracking-tight mt-0.5">${t('client_inspector_sub', locale)}</span>
           </div>
         </div>
